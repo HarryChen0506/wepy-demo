@@ -18,6 +18,7 @@
 <template>
   <view class="container">
     <view class="userinfo" @tap="handleViewTap">
+      <button open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="onGotUserInfo">获取用户信息</button>
       <image class="userinfo-avatar" src="{{ userInfo.avatarUrl }}" background-size="cover"/>
       <view class="userinfo-nickname">{{ userInfo.nickName }}</view>
     </view>
@@ -66,7 +67,7 @@
 
     <panel>
       <view class="title" slot="title">测试组件Repeat</view>
-      <repeat for="" index="index" item="item" key="key">
+      <repeat for="{{groupList}}" index="index" item="item" key="key">
         <group :grouplist="item" :indexa="index"></group>
       </repeat>
     </panel>
@@ -107,7 +108,7 @@
 
   export default class Index extends wepy.page {
     config = {
-      navigationBarTitleText: 'test'
+      navigationBarTitleText: '框架自带'
     }
     components = {
       panel: Panel,
@@ -182,6 +183,14 @@
     }
 
     methods = {
+      handleViewTap () {
+        console.log('handle')
+      },
+      onGotUserInfo (e) {
+        console.log(e.detail.errMsg)
+        console.log(e.detail.userInfo)
+        console.log(e.detail.rawData)
+      },
       plus () {
         this.mynum++
       },
@@ -196,6 +205,7 @@
         })
       },
       tap () {
+        console.log('this', this)
         console.log('do noting from ' + this.$name)
       },
       communicate () {
@@ -234,6 +244,7 @@
     }
 
     onLoad() {
+      console.log('onload-index')
       let self = this
       this.$parent.getUserInfo(function (userInfo) {
         if (userInfo) {
