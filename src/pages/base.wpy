@@ -1,0 +1,60 @@
+<style lang="less">
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .userinfo-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+  }
+
+  .userinfo-nickname {
+    color: #aaa;
+  }
+</style>
+<template>
+  <view class="container">
+    <view>基础模板</view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '基础模板'
+    }
+    components = {
+      // panel: Panel,
+    }
+
+    mixins = []
+
+    data = {     
+      userInfo: {
+        nickName: '加载中...'
+      }
+    }
+
+    computed = {
+      // now () {
+      //   return +new Date()
+      // }
+    }
+
+    methods = {
+      
+    }
+
+    events = {
+      
+    }
+
+    onLoad() {
+      console.log('onload-index')
+    }
+  }
+</script>
