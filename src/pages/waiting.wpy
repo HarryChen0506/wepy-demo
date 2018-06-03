@@ -1,0 +1,98 @@
+<style lang="less">
+  page {
+    width: 100%;
+    height: 100%;
+  }
+  .page-waiting {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    // align-items:center;
+    // justify-content:center;
+    .main {
+      width: 100%;
+      height: 100vw;
+      .image {
+        width: 100%;
+        height: 100vw;
+      }
+    }
+    .footer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.5);
+      
+      .button {
+        &.rechoose {
+          margin-bottom: 20rpx;
+        }
+        line-height:44rpx;
+        font-size:32rpx;
+        text-align: center;
+        padding: 22rpx 0;
+        border-radius:4rpx;
+        width:600rpx;
+        box-sizing:border-box;
+        color:white;
+      }
+      .red {
+        background-color:#FF3366;
+      }
+    }
+  }
+</style>
+<template>
+  <view class="page-waiting">
+    <view class="main">
+      <image class="image" src="{{iamgePath}}"/>
+    </view>  
+    <view class="footer">
+      <view class="button red rechoose">重选照片</view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: 'waiting'
+    }
+    components = {
+      // panel: Panel,
+    }
+
+    mixins = []
+
+    data = {     
+      iamgePath: '',
+    }
+
+    computed = {
+      // now () {
+      //   return +new Date()
+      // }
+    }
+
+    methods = {
+      
+    }
+
+    events = {
+      
+    }
+
+    onLoad() {
+      const {globalData} = this.$parent
+      const demo = [
+        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
+        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
+      ]
+      this.iamgePath = globalData.cropedImagePath || demo[0]
+    }
+  }
+</script>

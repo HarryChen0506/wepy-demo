@@ -1,0 +1,379 @@
+<style lang="less">
+  page {
+    width: 100%;
+    height: 100%;
+  }
+  .page-crop {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    // align-items:center;
+    // justify-content:center;
+    .header {
+      height: 14rpx;
+      background:rgba(255,255,255,0.5);
+    }
+    .main {
+      box-sizing:border-box;
+      border:4rpx solid #000;
+      position: relative;
+      .image-wrap {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        // transition: all 0.1s linear;
+        transition-property: left, top;
+        transition-duration: 0.1s;
+      }
+    }
+    .footer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,0.5);
+      .word {
+        font-size:32rpx;
+        line-height:44rpx;
+        color:#333;
+        margin-bottom: 60rpx;
+      }
+      .button {
+        &.generate {
+          margin-bottom: 20rpx;
+        }
+        line-height:44rpx;
+        font-size:32rpx;
+        padding:22rpx 0rpx;
+        border-radius:4rpx;
+        text-align: center;
+        width:600rpx;
+        box-sizing:border-box;
+        color:white;
+      }
+      .red {
+        background-color:#FF3366;
+      }
+      .black {
+        background-color:black;
+      }
+    }
+    .canvas-wrap {
+      position: fixed;
+      left: 0;
+      bottom: -2050px;
+      z-index: -2;
+      opacity: 0;
+      visibility: none;
+    }
+  }
+</style>
+<template>
+  <view class="page-crop">
+    <view class="header"></view>
+    <view 
+      class="main" 
+      style="width:{{box.width}}px;height:{{box.height}}px"
+      @touchstart="ontouchstart" 
+      @touchmove="ontouchmove" 
+      @touchend="ontouchend"
+    >
+      <view class="image-wrap" style="left:{{img.x}}px;top:{{img.y}}px;transition-duration: {{transitionDuration}};">  
+        <image src="{{iamgePath}}" bind:load="imageLoad" style="width:{{img.width}}px;height:{{img.height}}px"/>
+      </view>      
+    </view>  
+    <view class="footer">
+      <view class="word">调整画面位置</view>
+      <view class="button red generate" @tap="generateImage">生成</view>
+      <view class="button black">重选</view>
+    </view>
+    <view class="canvas-wrap">
+      <canvas style="width: {{canvas.width}}px; height: {{canvas.height}}px;border: 1px solid #000;" canvas-id="mycanvas" />
+    </view>
+  </view>  
+</template>
+
+<script>
+  import wepy from 'wepy'
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '裁剪图片'
+    }
+    components = {
+      // panel: Panel,
+    }
+
+    mixins = []
+
+    data = {     
+      iamgePath: '',
+      box: {
+        width: wx.getSystemInfoSync().windowWidth,
+        height: wx.getSystemInfoSync().windowWidth,
+      },
+      img: {        
+        originWidth: 0, // 图片原始大小
+        originHeight: 0,
+        autoScale: 1, // 自适应的缩放比
+        autoX:0,     // 自适应后的x偏移
+        autoY:0,
+        scale: 1,  // 真实缩放比 （相比原始尺寸）
+        autoWidth: 0,
+        autoHeight: 0,
+        width: 0,  // 变换后的宽
+        height: 0, // 变换后的高
+        x: 0,  // 与box的X轴偏移
+        y: 0,  // 与box的y轴偏移
+      },
+      gesture: {
+        startX: 0,
+        startY: 0,
+        zoom: false,
+        distance: 0
+      },
+      transitionDuration: 'o.1s',
+      canvas: {
+        width: 375,
+        height: 375,
+        ratio: 1
+      }
+    }
+
+    computed = {
+      // now () {
+      //   return +new Date()
+      // }
+    }
+
+    methods = {
+      imageLoad (e) {
+        const {detail} = e
+        this.img.originWidth = detail.width
+        this.img.originHeight = detail.height
+        console.log('image load', detail)
+        // 图片自适应
+        this.autoScale()
+
+      },
+      ontouchstart (e) {
+        // console.log('ontouchstart', e)
+        this.transitionDuration = '0s'
+        if (e.touches.length === 1) {
+          let { clientX, clientY } = e.touches[0]
+          this.gesture.startX = clientX
+          this.gesture.startY = clientY
+          // this.touchStartEvent = e.touches;
+          // console.log('gesture-one', this.gesture);
+        } else {
+          let xMove = e.touches[1].clientX - e.touches[0].clientX
+          let yMove = e.touches[1].clientY - e.touches[0].clientY
+          let distance = Math.sqrt(xMove * xMove + yMove * yMove)
+         
+          this.gesture.distance = distance
+          this.gesture.zoom = true
+          // console.log('gesture-two', this.gesture);
+        }
+      },
+      ontouchmove: this.throttle( this.touchmove, 1000/60).bind(this),
+      ontouchend (e) {
+        // console.log('ontouchend', e)
+        
+        if (e.touches.length === 0) {
+          const {gesture, img, box} = this          
+          const scale = img.scale
+          // 如果小于自动缩放时，则还原
+          if (img.scale < img.autoScale) {
+            img.scale = img.autoScale
+            let diffScale = img.autoScale - scale
+            img.width = img.scale * img.originWidth
+            img.height = img.scale * img.originHeight
+            // img.x = img.x - diffScale * img.originWidth *0.5 
+            // img.y = img.y - diffScale * img.originHeight *0.5 
+            img.x = img.autoX
+            img.y = img.autoY
+          }
+          // 如果移动超出边界 则还原
+          if(!gesture.zoom){
+            if (img.x > 0) {
+              img.x = 0
+            } 
+            if (img.y > 0) {
+              img.y = 0
+            } 
+            if (box.width - img.width > img.x ) {
+              img.x = box.width - img.width
+            }
+            if (box.height - img.height > img.y ) {
+              img.y = box.height - img.height
+            }
+            this.transitionDuration = '0.1s'
+          }          
+          //重置缩放状态
+          gesture.zoom = false 
+        }
+        console.log('end', this.img)
+      },
+      generateImage () {
+        console.log('123')
+        this.createCanvas()
+      }
+    }
+
+    events = {
+      
+    }
+
+    onLoad() {
+      const {globalData} = this.$parent
+      const demo = [
+        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
+        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
+      ]
+      this.iamgePath = globalData.choosedImagePath || demo[0]
+      // console.log('wx.getSystemInfoSync().windowWidth', wx.getSystemInfoSync())
+      // 计算canvas尺寸
+      const { pixelRatio=2 } = wx.getSystemInfoSync() || {}
+      const {img, box, canvas} = this
+      canvas.ratio = pixelRatio
+      canvas.width = pixelRatio * box.width
+      canvas.height = pixelRatio * box.height
+    }
+    // 自适应图片
+    autoScale () {
+      // 获取图片原始大小
+      const {originWidth, originHeight} = this.img
+      const boxWidth = this.box.width
+      const minSize = Math.min(originWidth, originHeight)
+      const autoScale = boxWidth / minSize
+      console.log('auto-scale', autoScale)
+      this.img.width = this.img.autoWidth = originWidth * autoScale
+      this.img.height = this.img.autoHeight = originHeight * autoScale
+      this.img.scale = this.img.autoScale = autoScale
+      // 位移使图片居中
+      this.img.x -= (originWidth*autoScale - boxWidth) * 0.5
+      this.img.y -= (originHeight*autoScale - boxWidth) * 0.5
+      this.img.autoX = this.img.x
+      this.img.autoY = this.img.y
+    }
+    touchmove (e) {
+      // console.log('ontouchmove', e)
+      if (e.touches.length === 1) {
+        //单指移动
+        if (this.gesture.zoom) {
+          //缩放状态，不处理单指
+          return;
+        }
+        const {gesture, img} = this
+        let { clientX, clientY } = e.touches[0];
+        let offsetX = clientX - gesture.startX;
+        let offsetY = clientY - gesture.startY;
+        gesture.startX = clientX;
+        gesture.startY = clientY;
+
+        img.x += offsetX;
+        img.y += offsetY;
+
+        // 判断边界
+        // var nowWidth = this.data.stv.width;
+        // var maxoffsetX = 320 - nowWidth;
+        // var nowHeight = this.data.stv.height;
+        // var maxoffsetY = 178.125 - nowHeight;
+
+        // if (stv.offsetX > maxoffsetX) {
+        //   stv.offsetX = maxoffsetX;
+        // } else if (stv.offsetX < 0) {
+        //   stv.offsetX = 0;
+        // }
+        // if (stv.offsetY > maxoffsetY) {
+        //   stv.offsetY = maxoffsetY;
+        // } else if (stv.offsetY < 0) {
+        //   stv.offsetY = 0;
+        // }
+        // this.setData({
+        //   stv: stv
+        // });
+        // console.log('this', this.data)
+      } else {
+        //双指缩放
+        const {gesture, img} = this
+        let xMove = e.touches[1].clientX - e.touches[0].clientX;
+        let yMove = e.touches[1].clientY - e.touches[0].clientY;
+        let distance = Math.sqrt(xMove * xMove + yMove * yMove);
+        
+        // 计算新的缩放比
+        let distanceDiff = distance - gesture.distance;
+        let diffScale =  0.004 * distanceDiff
+        let newScale = img.scale + diffScale;
+        if (newScale * img.originWidth < 100) {
+          return 
+        }
+        let newWidth = newScale * img.originWidth;
+        let newHeight = newScale * img.originHeight;
+        // console.log('newWidth', newWidth, 'newHeight', newHeight)
+
+        gesture.distance = distance
+        img.scale = newScale          
+        img.width = newWidth
+        img.height = newHeight
+        // 位移变化。使放大中心为图片中心
+        img.x = img.x - diffScale * img.originWidth *0.5 
+        img.y = img.y - diffScale * img.originHeight *0.5 
+      }
+    }
+    // 函数截留
+    throttle(func, deltaX) {
+      let lastCalledAt = new Date().getTime();
+      let that = this;
+      return function(e) {
+        if(new Date().getTime() - lastCalledAt >= deltaX) {
+            func.apply(that, arguments);
+            lastCalledAt = new Date().getTime();
+        }
+      }
+    }
+    // 生成canvas
+    createCanvas () {
+      const _this = this;
+      const {img, box, canvas} = this;
+      const choosedImagePath = this.iamgePath;
+      const context = wx.createCanvasContext('mycanvas');
+      const { ratio } = canvas
+      const {width, height, x, y} = img
+      const offsetX = x;
+      const offsetY = y;
+
+      //防止锯齿，绘的图片是所需图片的两倍
+      context.drawImage(choosedImagePath, offsetX * ratio, offsetY * ratio, width * ratio, height * ratio);
+
+     
+      //绘制图片
+      context.draw();
+
+      //将生成好的图片保存到本地，需要延迟一会，绘制期间耗时
+      setTimeout(function () {
+        wx.canvasToTempFilePath({
+          canvasId: 'mycanvas',
+          success: function (res) {
+            let tempFilePath = res.tempFilePath;
+            console.log('tempFilePath', tempFilePath);
+            const {globalData} = _this.$parent
+            globalData.cropedImagePath = tempFilePath
+            console.log('globalData', _this.$parent.globalData)
+            // 跳转裁剪页面
+            wx.navigateTo({url: `/pages/waiting`})
+          },
+          fail: function (res) {
+            console.log(res);
+          },
+          complete:function(e){
+            // wx.hideLoading();
+          }
+        });
+      }, 200);
+
+    }
+  }
+</script>

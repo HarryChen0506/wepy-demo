@@ -22,6 +22,9 @@ setStore(store)
 export default class extends wepy.app {
   config = {
     pages: [
+      'pages/versa',
+      'pages/crop',
+      'pages/waiting',
       'pages/base',
       'pages/changebg',
       'pages/gesture',
@@ -36,15 +39,20 @@ export default class extends wepy.app {
   }
 
   globalData = {
-    userInfo: null
+    userInfo: null,
+    choosedImagePath: null,
+    cropedImagePath: null
   }
 
   constructor () {
     super()
     this.use('requestfix')
+    this.use('promisify')
   }
 
-  onLaunch() {
+  onLaunch(options) {
+    // console.log('onLaunch', options)
+    // console.log('wx.getSystemInfoSync()', wx.getSystemInfoSync() )
     this.testAsync()
   }
 
