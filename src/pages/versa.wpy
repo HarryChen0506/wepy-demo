@@ -62,12 +62,14 @@
     <view class="bottom">
       <image class="logo" src="{{logoUrl}}"/> 
       <view class="button" @tap="chooseImg">选取照片</view>
+      <button @tap="test">测试接口</button>  
     </view>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import {styleTransfer} from '../services/service.js'
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: 'versa出品-demo'
@@ -114,6 +116,19 @@
         console.log('globalData', this.$parent.globalData)
         // 跳转裁剪页面
         wx.navigateTo({url: `/pages/crop`})
+      },
+      async test () {
+        console.log('测试接口')
+        try {
+          const data = await styleTransfer.upload({
+            query: {name: 'hello'},
+            data: {hello: 123}
+          })
+          // console.log('测试-res', data)
+        } catch (err) {
+          console.log('err', err)
+        }
+        
       }
     }
 

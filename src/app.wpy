@@ -10,6 +10,8 @@
 </style>
 
 <script>
+// 风格迁移：wx21630a5d4651096a
+// 俄罗斯：wxc41d9fc2cdd02cf2
 import wepy from 'wepy'
 import 'wepy-async-function'
 
