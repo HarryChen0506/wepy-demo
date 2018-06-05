@@ -24,9 +24,9 @@ setStore(store)
 export default class extends wepy.app {
   config = {
     pages: [
+      'pages/waiting',
       'pages/versa',
       'pages/crop',
-      'pages/waiting',
       'pages/base',
       'pages/changebg',
       'pages/gesture',

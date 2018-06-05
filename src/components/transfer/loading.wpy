@@ -1,0 +1,188 @@
+<style lang="less" scoped>
+	.loading-00000 {
+    background-position: -10rpx -240rpx
+  }		
+	.loading-00001 {
+    background-position: -10rpx -5530rpx
+  }		
+	.loading-00002 {
+    background-position: -10rpx -470rpx
+  }		
+	.loading-00003 {
+    background-position: -10rpx -700rpx
+  }		
+	.loading-00004 {
+    background-position: -10rpx -930rpx
+  }		
+	.loading-00005 {
+    background-position: -10rpx -1160rpx
+  }		
+	.loading-00006 {
+    background-position: -10rpx -1390rpx
+  }		
+	.loading-00007 {
+    background-position: -10rpx -1620rpx
+  }
+	.loading-00008 {
+    background-position: -10rpx -1850rpx
+  }
+	.loading-00009 {
+    background-position: -10rpx -2080rpx
+  }
+	.loading-00010 {
+    background-position: -10rpx -2310rpx
+  }
+	.loading-00011 {
+    background-position: -10rpx -2540rpx
+  }
+	.loading-00012 {
+    background-position: -10rpx -2770rpx
+  }
+	.loading-00013 {
+    background-position: -10rpx -3000rpx
+  }
+	.loading-00014 {
+    background-position: -10rpx -3230rpx
+  }
+	.loading-00015 {
+    background-position: -10rpx -3460rpx
+  }
+	.loading-00016 {
+    background-position: -10rpx -3690rpx
+  }
+	.loading-00017 {
+    background-position: -10rpx -3920rpx
+  }
+	.loading-00018 {
+    background-position: -10rpx -4150rpx
+  }
+	.loading-00019 {
+    background-position: -10rpx -4380rpx
+  }
+	.loading-00020 {
+    background-position: -10rpx -4610rpx
+  }
+	.loading-00021 {
+    background-position: -10rpx -4840rpx
+  }
+	.loading-00022 {
+    background-position: -10rpx -5070rpx
+  }
+	.loading-00023 {
+    background-position: -10rpx -5300rpx
+  }
+	.loading-00024 {
+    background-position: -10rpx -10rpx
+  }
+	.loading-00025 {
+    background-position: -10rpx -5760rpx
+  }
+	.loading-00026 {
+    background-position: -10rpx -5990rpx
+  }
+	.loading-00027 {
+    background-position: -10rpx -6220rpx
+  }
+	.loading-00028 {
+    background-position: -10rpx -6450rpx
+  }
+	.loading-00029 {
+    background-position: -10rpx -6680rpx
+  }
+	.loading-00030 {
+    background-position: -10rpx -6910rpx
+  }
+	.loading-00031 {
+    background-position: -10rpx -7140rpx
+  }
+	.loading-00032 {
+    background-position: -10rpx -7370rpx
+  }
+	.loading-00033 {
+    background-position: -10rpx -7600rpx
+  }
+	.loading-00034 {
+    background-position: -10rpx -7830rpx
+  }
+	.loading-00035 {
+    background-position: -10rpx -8060rpx
+  }
+	.loading-00036 {
+    background-position: -10rpx -8290rpx
+  }
+	.loading-00037 {
+    background-position: -10rpx -8520rpx
+  }
+	.loading-00038 {
+    background-position: -10rpx -8750rpx
+  }
+	.loading-00039 {
+    background-position: -10rpx -8980rpx
+  }
+	.loading-00040 {
+    background-position: -10rpx -9210rpx
+  }
+	.loading-00041 {
+    background-position: -10rpx -9440rpx
+  }
+	.loading-00042 {
+    background-position: -10rpx -9670rpx
+  }
+	.loading-00043 {
+    background-position: -10rpx -9900rpx
+  }
+	.loading-00044 {
+    background-position: -10rpx -10130rpx
+  }
+	.loading-00045 {
+    background-position: -10rpx -10360rpx
+  }
+	.loading-00046 {
+    background-position: -10rpx -10590rpx
+  }
+	.loading-00047 {
+    background-position: -10rpx -10820rpx
+  }
+	.loading-00048 {
+    background-position: -10rpx -11050rpx
+  }		
+</style>
+<template>
+  <view 
+    class="loading-{{frame}}"    
+    style="background-image:url('../../assets/images/loading-css-sprite.png');background-size:210rpx 11270rpx;width:190rpx;height:210rpx"
+  >
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class loading extends wepy.component {
+  data = {
+    frame: '00001',
+    intervalId: undefined,
+    bgSrc: '/loading-css-sprite.png'
+  }
+
+  events = {}
+
+  start () {
+    this.intervalId = setInterval(() => {
+      let frame = Math.floor((+new Date()) % (49 * 150) / 150)
+      frame = frame.toString().padStart(5, '0')
+      if (frame !== this.frame) {
+        this.frame = frame
+        this.$apply()
+      }
+    }, 25)
+  }
+  stop () {
+    clearInterval(this.intervalId)
+  }
+  onShow () {
+    this.start()
+  }
+  onHide () {
+    this.stop()
+  }
+}
+</script>

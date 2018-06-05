@@ -362,7 +362,7 @@
             const {globalData} = _this.$parent
             globalData.cropedImagePath = tempFilePath
             console.log('globalData', _this.$parent.globalData)
-            // 跳转裁剪页面
+            // 跳转裁剪后页面
             wx.navigateTo({url: `/pages/waiting`})
           },
           fail: function (res) {

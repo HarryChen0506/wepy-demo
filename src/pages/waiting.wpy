@@ -13,9 +13,38 @@
     .main {
       width: 100%;
       height: 100vw;
+      position: relative;
       .image {
         width: 100%;
         height: 100vw;
+      }
+      .loading-wrap {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%; 
+        .bg {
+          position: absolute;
+          top:0;
+          left:0;
+          z-index: 1;
+          width: 100%;
+          height: 100%;
+          // background: rgba(255, 255, 255, 0.9);
+        }
+        .loading {
+          position: absolute;
+          top:0;
+          left:0;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items:center;
+        }
       }
     }
     .footer {
@@ -43,33 +72,48 @@
         background-color:#FF3366;
       }
     }
+    .blur {
+      filter: blur(10px);
+    }
   }
 </style>
 <template>
   <view class="page-waiting">
     <view class="main">
-      <image class="image" src="{{iamgePath}}"/>
+      <image class="image {{showLoading?'blur':''}}" src="{{iamgePath}}"/>
+      <view class="loading-wrap" wx-if="{{showLoading}}">
+        <view class="bg"></view>
+        <view class="loading">
+          <loading></loading>
+        </view>        
+      </view>
     </view>  
     <view class="footer">
-      <view class="button red rechoose">重选照片</view>
+      <view class="button red rechoose" @tap="test">重选照片</view>
+      <view class="button red rechoose" @tap="test1">风格64</view>
+      <view class="button red rechoose" @tap="test2">风格124</view>
     </view>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import {styleTransfer, base} from '../services/service.js'
+  import {cacheStyle} from '../services/cache.js'
+  import loading from '../components/transfer/loading'
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: 'waiting'
     }
     components = {
-      // panel: Panel,
+      loading: loading
     }
 
     mixins = []
 
     data = {     
       iamgePath: '',
+      showLoading: false
     }
 
     computed = {
@@ -79,20 +123,57 @@
     }
 
     methods = {
-      
+      test () {
+        console.log('test')
+        // cacheStyle.set('wo',{name: 123})
+        // cacheStyle.set('hah',{name: 12222})
+        console.log('cache', cacheStyle)
+      },
+      test1 () {
+        this.segment(this.iamgePath, 64)
+      },
+      test2 () {
+        this.segment(this.iamgePath, 124)
+      }
     }
 
     events = {
       
     }
 
-    onLoad() {
+    async onLoad() {
       const {globalData} = this.$parent
       const demo = [
-        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
-        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
+        'http://tmp/wx21630a5d4651096a.o6zAJsztn2DIgXEGteELseHpiOtU.1pt6jtQ6MgIb779bd49c491911729629c3064e1cb5f0.png',
+        // "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
+        // "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
       ]
-      this.iamgePath = globalData.cropedImagePath || demo[0]
+      // this.iamgePath = globalData.cropedImagePath || demo[0]
+      this.iamgePath =  demo[0]
+      console.log('globalData', globalData)
+      // this.segment(this.iamgePath, 64)
+    }
+    showLoading () {
+      this.showLoading = true
+      this.$invoke('loading', 'onShow');
+    }
+    hideLoading () {
+      this.showLoading = false
+      this.$invoke('loading', 'onHide');
+    }
+    async segment (localImgPath, styleId) {
+      // 判断是否在缓存里
+      const cacheKey = `${localImgPath}_styleId_${styleId}`
+      if (cacheStyle.get(cacheKey)) {
+        console.log('get-cache', cacheStyle)
+        return cacheStyle.get(cacheKey)
+      }
+      // 先上传到静态服务器
+      const {url} = await base.upload(localImgPath)
+      // 再进行风格迁移
+      const data = await styleTransfer.segment(url, styleId)      
+      console.log('set-cache', cacheStyle)
+      return cacheStyle.set(cacheKey, data)
     }
   }
 </script>
