@@ -1,8 +1,10 @@
 // 业务服务的封装
 import http from './http.js'
 import tool from '../utils/tool.js'
+import wepy from 'wepy'
 // 域名
-const ENV = 'dev'  // 'prod'
+// const ENV = 'dev'  // 'dev' 测试
+const ENV = 'prod'  // 'prod' 生产
 const host = {
   openapi: {
     dev: 'https://openapi.dev.versa-ai.com',
@@ -35,6 +37,45 @@ export const base = {
       dataType: 'json'
     }
     return http.request(reqData)
+  },
+  // 管理上传token
+  getUploadToken: async function () {
+    let token = wx.getStorageSync('token')
+    if (token && token.expire > Date.now()) {
+      return token
+    }
+    try {
+      const data = await base.uploadToken()
+      token = data && data.result
+      wx.setStorageSync('token', token)
+      return token
+    } catch (err) {
+      console.log('get uploadToken fail', err)
+    }
+  },
+  upload: async function (filePath) {
+    // 上传图片
+    // filePath 本地图片路径
+    const token = await base.getUploadToken()
+    const imgName = tool.createImgName(16)
+    token.params.key = `upload/mini-program/transfer/${imgName}.png`
+    // console.log('token', token)
+    let {data} = await wepy.uploadFile({
+      filePath,
+      name: 'file',
+      url: token.host,
+      formData: token.params
+    })
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+        data.host = 'https://static01.versa-ai.com/'
+        data.url = data.host + data.picurl
+      } catch (err) {
+        console.log('upload image string parse to json fail !!!')
+      }
+    }
+    return data
   },
   // 通过login的code鉴权获取session
   auth: function (code) {
@@ -72,17 +113,22 @@ export const styleTransfer = {
     }
     return http.request(reqData)
   },
-  upload: async function () {
-    // 上传图片
-    console.log('get uploadToken')
-    try {
-      const {data} = await base.uploadToken()
-      // const token = data.result
-      console.log('token-data', data)
-    } catch (err) {
-      console.log('get-uploadToken fail', err)
+  segment: function (remoteImgUrl, styleId) {
+    // remoteImgUrl 远程静态服务器图片地址
+    // styleId 渲染风格Id
+    const reqData = {
+      method: 'POST',
+      url: `${getHost()}/web/image/render/segment`,
+      header: {'content-type': 'application/x-www-form-urlencoded'},
+      data: {
+        clientType: 'mini-program',
+        timestamp: Date.parse(new Date()),
+        imageUrl: remoteImgUrl,
+        styleId,
+        originalColors: 'Y'
+      }
     }
-    // return token
+    return http.request(reqData)
   }
 }
 

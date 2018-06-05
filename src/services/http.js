@@ -13,6 +13,7 @@ const Session = {
     try {
       const data = await base.auth(code)
       const {responseCode, result} = data
+      // console.log('setSession', responseCode, result)
       if (responseCode === '0000') {
         wx.setStorageSync(this._name, result)
         return result
@@ -38,12 +39,11 @@ function request (option = {}) {
   }
   const newOption = Object.assign({}, config, option)
   const session = Session.get()
-  console.log('session-get', session)
+  // console.log('session-get', typeof session, session)
   newOption.data[sessionName] = session
   return new Promise(async function (resolve, reject) {
     try {
       let result = await wepy.request(newOption)
-      // resolve(res)
       resManage(result, resolve, reject, option)
     } catch (err) {
       reject(err)
@@ -76,9 +76,9 @@ async function continueSessionRequest (option = {}, resolve, reject) {
   // 最多执行三次
   let rejectData = {}
   for (let i = 0; i < 3; i++) {
-    console.log('续session次数：' + i)
     Session.remove()
-    const session = Session.set()
+    const session = await Session.set()
+    console.log('续session次数：' + i, session)
     newOption.data[sessionName] = session
     let result = await wepy.request(newOption)
     const {data, errMsg, header, statusCode} = result
@@ -115,7 +115,8 @@ function commonRequest (option = {}) {
 
 const http = {
   request,
-  commonRequest
+  commonRequest,
+  Session
 }
 
 export default http

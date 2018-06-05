@@ -69,7 +69,7 @@
 
 <script>
   import wepy from 'wepy'
-  import {styleTransfer} from '../services/service.js'
+  import {styleTransfer, base} from '../services/service.js'
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: 'versa出品-demo'
@@ -120,11 +120,13 @@
       async test () {
         console.log('测试接口')
         try {
-          const data = await styleTransfer.upload({
-            query: {name: 'hello'},
-            data: {hello: 123}
-          })
-          // console.log('测试-res', data)
+          // const {tempFilePaths: [path]} = await wepy.chooseImage({count: 1,sizeType: ['compressed']})
+          // const data = await base.upload(path)
+          // console.log('测试-upload', data, typeof data)
+          const imageUrl = 'https://static01.versa-ai.com/upload/mini-program/transfer/fd30f49b558a1856.png'
+          const data = await styleTransfer.segment(imageUrl, 64)
+          console.log('测试-segment', data, typeof data)
+
         } catch (err) {
           console.log('err', err)
         }
