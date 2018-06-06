@@ -33,12 +33,33 @@
       display: flex;
       flex-direction: column;
       align-items:center;
-      justify-content:center;   
+      justify-content:space-around;   
+      // justify-content:center;   
       .type-wrap {
         display: flex;
         align-items:center;
         justify-content:center;   
-      }  
+      }
+      .style-wrap {
+        width: 90%;
+        height: 160rpx;
+        .scroll {
+          width: 100%;
+          height: 100%;
+          white-space: nowrap; 
+          display: flex;
+          .random-wrap {
+            display: inline-block;
+          }
+          .box {
+            display: inline-block;
+            width: 160rpx;
+            height: 160rpx;
+            background: pink;
+            margin-left: 20px;
+          }
+        }
+      }
     }
     .footer {
       flex: 1;
@@ -90,17 +111,30 @@
                
       </view>
       <view class="style-wrap">
-        <randomStyle 
-          :selectButtonType.sync="selectButtonType"
-          :thumbnailUrl.sync="selectButtonThumbnailUrl"
-          :selectStyleTitle.sync="selectStyleTitle"
-          :selectStatus.sync="selectStatus"
-          @randomButton.user="onRandomSelect"
-        ></randomStyle>
-        <button @tap="onChooseStyle">自己选风格</button>
+        <scroll-view 
+          class="scroll"
+          scroll-x='true' 
+          style="" 
+        > 
+          <view class="random-wrap">
+            <randomStyle 
+              :selectButtonType.sync="selectButtonType"
+              :randomSelectThumbnailUrl.sync="selectButtonThumbnailUrl"
+              :randomSelectTitle.sync="selectStyleTitle"
+              :randomSelectStatus.sync="randomSelectStatus"
+              @randomButton.user="onRandomSelect"
+            ></randomStyle>
+          </view>          
+          <view class="box"></view>
+          <view class="box"></view>
+          <view class="box"></view>
+          <view class="box"></view>
+        </scroll-view>
+        
+        <!-- <button @tap="onChooseStyle">自己选风格</button> -->
       </view>
       <view class="share-wrap">
-        
+        <button @tap="onChooseStyle">自己选风格</button>
       </view>
     </view>
     <view class="footer" wx:if="{{showResult}}">分享结果</view>
@@ -137,10 +171,11 @@
       styleSegmentPath: 'http://static01.versa-ai.com/images/render/render_1528254108192_1528254180.0760357.jpg',
       styleUnsegmentPath: 'http://static01.versa-ai.com/images/render/blend_1528254108192_1528254180.3011894.jpg',
 
-      selectButtonType: 'random',
-      selectButtonThumbnailUrl: '',
-      selectStyleTitle: '',
-      selectStatus: 'null', // 'success' 'fail' 'null' 'loading'
+      selectButtonType: 'random', // 选择按钮类型
+      selectButtonThumbnailUrl: '', // 风格缩略图
+      selectStyleTitle: '', // 风格主题
+      selectStatus: 'null', // 风格结果 'success' 'fail' 'null' 'loading'
+      randomSelectStatus: 'null', // 随机按钮结果 'success' 'fail' 'null' 'loading'
     }
 
     computed = {
@@ -159,19 +194,20 @@
         }        
       },
       onRandomSelect () {
-        console.log('随机选择')
+        console.log('随机选择')        
+        this.randomSelectStatus = 'loading'
         this.selectButtonType = 'random'
-        this.selectStatus = 'loading'
         setTimeout(() => {
           this.selectButtonThumbnailUrl = mock['selectButtonThumbnailUrl']
           this.selectStyleTitle = mock['selectStyleTitle']
-          this.selectStatus = 'success'
+          this.randomSelectStatus = this.selectStatus = 'success'
           this.$apply()
         }, 2000);
       },
       onChooseStyle () {
         console.log('指定选择')
         this.selectButtonType = 'choose'
+        this.randomSelectStatus = ''
         this.selectStatus = 'loading'
         setTimeout(() => {
           this.selectButtonThumbnailUrl = mock['selectButtonThumbnailUrl']

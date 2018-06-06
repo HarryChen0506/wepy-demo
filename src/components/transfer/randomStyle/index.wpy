@@ -43,10 +43,10 @@
 <template>
   <view class="random-component" @tap="click">
     <image class="bg" src="./bg.png"></image>
-    <image class="thumbnail" wx-if="{{showThumbnail}}" src="{{thumbnailUrl}}" mode="aspectFill"></image>
+    <image class="thumbnail" wx-if="{{showThumbnail}}" src="{{randomSelectThumbnailUrl}}" mode="aspectFill"></image>
     <image class="icon" src="./icon.png"></image>
     <view class="title" wx-if="{{showText}}">
-      <text>{{selectStatus === 'null' ? defaultTitle : selectStyleTitle}}</text> 
+      <text>{{randomSelectStatus === 'null' ? defaultTitle : randomSelectTitle}}</text> 
     </view>    
   </view>
 </template>
@@ -58,18 +58,18 @@ export default class RandomStyle extends wepy.component {
       type: String,
       default: 'null'
     },
-    thumbnailUrl: {
+    randomSelectThumbnailUrl: {
       type: String,
       default: 'null'
     },
-    selectStyleTitle: {
+    randomSelectTitle: {
       type: String,
       default: 'null'
     },
-    selectStatus: {
+    randomSelectStatus: {
       type: String,
       default: 'null'
-    }
+    },
   }
 
   data = {
@@ -81,16 +81,17 @@ export default class RandomStyle extends wepy.component {
       return this.selectButtonType === 'random'
     },
     isLoading () {
-      return this.selectStatus === 'loading'
+      return this.randomSelectStatus === 'loading'
     },
     isSuccess () {
-      return this.selectStatus === 'success'
+      return this.randomSelectStatus === 'success'
     },
     showThumbnail () {
       return this.isSuccess && this.isRandomSelect
     },
     showText () {
-      return (this.isSuccess && this.isRandomSelect) || this.selectStatus === 'null'
+      console.log('showText', this.isSuccess, this.isRandomSelect, this.randomSelectStatus === 'null')
+      return (this.isSuccess || this.randomSelectStatus === 'null') && this.isRandomSelect
     }
   }
 
