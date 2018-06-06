@@ -1,0 +1,106 @@
+<style lang="less" scoped>
+  .random-component {
+    width: 160rpx;
+    height: 160rpx;
+    background: pink;
+    position: relative;
+    .bg {
+      width: 160rpx;
+      height: 160rpx;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .thumbnail {
+      width: 160rpx;
+      height: 160rpx;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      opacity: 0.5;
+    }
+    .icon {
+      width: 56rpx;
+      height: 44rpx;
+      position: absolute;
+      top: 58rpx;
+      left: 52rpx;
+      z-index: 3;
+    }
+    .title {
+      position: absolute;
+      width: 160rpx;
+      bottom: 18rpx;
+      z-index: 3;
+      font-size: 20rpx;
+      color: #fff;
+      text-align: center;
+    }
+  }
+</style>
+<template>
+  <view class="random-component" @tap="click">
+    <image class="bg" src="./bg.png"></image>
+    <image class="thumbnail" wx-if="{{showThumbnail}}" src="{{thumbnailUrl}}" mode="aspectFill"></image>
+    <image class="icon" src="./icon.png"></image>
+    <view class="title" wx-if="{{showText}}">
+      <text>{{selectStatus === 'null' ? defaultTitle : selectStyleTitle}}</text> 
+    </view>    
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class RandomStyle extends wepy.component {
+  props = {
+    selectButtonType: {
+      type: String,
+      default: 'null'
+    },
+    thumbnailUrl: {
+      type: String,
+      default: 'null'
+    },
+    selectStyleTitle: {
+      type: String,
+      default: 'null'
+    },
+    selectStatus: {
+      type: String,
+      default: 'null'
+    }
+  }
+
+  data = {
+    defaultTitle: '智能风格推荐'
+  }
+
+  computed = {
+    isRandomSelect () {
+      return this.selectButtonType === 'random'
+    },
+    isLoading () {
+      return this.selectStatus === 'loading'
+    },
+    isSuccess () {
+      return this.selectStatus === 'success'
+    },
+    showThumbnail () {
+      return this.isSuccess && this.isRandomSelect
+    },
+    showText () {
+      return (this.isSuccess && this.isRandomSelect) || this.selectStatus === 'null'
+    }
+  }
+
+  events = {}
+
+  methods = {
+    click () {
+      console.log('click', this.selectButtonType)
+      this.$emit('randomButton')
+    }
+  }
+}
+</script>

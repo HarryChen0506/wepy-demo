@@ -24,6 +24,7 @@ setStore(store)
 export default class extends wepy.app {
   config = {
     pages: [
+      'pages/style',
       'pages/waiting',
       'pages/versa',
       'pages/crop',
@@ -35,7 +36,7 @@ export default class extends wepy.app {
     window: {
       backgroundTextStyle: 'light',
       navigationBarBackgroundColor: '#fff',
-      navigationBarTitleText: '测试1',
+      navigationBarTitleText: 'versa出品',
       navigationBarTextStyle: 'black'
     }
   }
