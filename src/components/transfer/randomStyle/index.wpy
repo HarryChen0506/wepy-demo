@@ -90,7 +90,7 @@ export default class RandomStyle extends wepy.component {
       return this.isSuccess && this.isRandomSelect
     },
     showText () {
-      console.log('showText', this.isSuccess, this.isRandomSelect, this.randomSelectStatus === 'null')
+      // console.log('showText', this.isSuccess, this.isRandomSelect, this.randomSelectStatus === 'null')
       return (this.isSuccess || this.randomSelectStatus === 'null') && this.isRandomSelect
     }
   }

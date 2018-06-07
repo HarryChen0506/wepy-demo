@@ -129,6 +129,30 @@ export const styleTransfer = {
       }
     }
     return http.request(reqData)
+  },
+  tagList: function () {
+    // 获取风格标签列表
+    const reqData = {
+      method: 'GET',
+      url: `${getHost()}/web/feature/featureTagOrder`,
+      dataType: 'json',
+      data: {
+        clientType: 'mini-program'
+      }
+    }
+    return http.request(reqData)
+  },
+  styleList: function () {
+    const reqData = {
+      method: 'GET',
+      url: `${getHost()}/web/feature/featureDetail`,
+      dataType: 'json',
+      data: {
+        renderType: 'transfer-image',
+        clientType: 'mini-program'
+      }
+    }
+    return http.request(reqData)
   }
 }
 

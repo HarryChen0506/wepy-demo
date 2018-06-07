@@ -119,8 +119,7 @@
             <image slot="selectedIcon" mode="scaleToFill" src="../assets/images/color-icon.png" style="width:48rpx; height:48rpx"></image>
             <image slot="unSelectedIcon" mode="scaleToFill" src="../assets/images/rawcolor-icon.png" style="width:48rpx; height:48rpx"></image>
           </typebuttoncolor> 
-        </view>
-        
+        </view>       
                
       </view>
       <view class="style-wrap">
@@ -137,9 +136,10 @@
               @randomButton.user="onRandomSelect"
             ></randomStyle>
           </view>  
-          <repeat for="{{tagList}}" index="index" item="tag" key="key">
+          <repeat for="{{filterTagList}}" index="index" item="tag" key="key">
             <styleTag 
               :tag.sync="tag"
+              :index.sync="index"
               @styleChange.user="onStyleChange"
             ></styleTag>
           </repeat>  
@@ -158,6 +158,7 @@
 
 <script>
   import wepy from 'wepy'
+  import {styleTransfer, base} from '../services/service.js'
   import typeButton from '../components/transfer/typeButton/index'
   import randomStyle from '../components/transfer/randomStyle/index'
   import styleButton from '../components/transfer/styleButton/index'
@@ -224,7 +225,7 @@
 
     mixins = []
 
-    data = {
+    data = {      
       hasSegmentButton: true,
       colorType: true,
       segmentType: false,
@@ -240,14 +241,18 @@
       selectStatus: 'null', // 风格结果 'success' 'fail' 'null' 'loading'
       randomSelectStatus: 'null', // 随机按钮结果 'success' 'fail' 'null' 'loading'
 
-      groupList: mock.groupList,
-      tagList: mock.tagList,
+      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34],
+      originTagList: [],
+      originStyleList: [],
+      filterTagList: [],
       currentStyle: {}
     }
 
-    computed = {
-      // now () {
-      //   return +new Date()
+    computed = {}
+
+    watch = {
+      // originTagList (newValue, oldValue) {
+      //   console.log(`originTagList value: ${oldValue} -> ${newValue}`)
       // }
     }
 
@@ -296,7 +301,59 @@
     }
 
     onLoad() {
-      console.log('onload-index')
+      // console.log('onload-index')
+      this.getListData()
     }
+
+    async getListData () {
+      const {globalData} = this.$parent
+      if (!globalData.styleList) {
+        try {
+          const styleList = await styleTransfer.styleList()
+          globalData.styleList = styleList.result
+        } catch (err) {
+          console.log('catch-error: get styleList fail', err)
+        }        
+      }
+      if (!globalData.tagList) {
+        try {
+          const tagList = await styleTransfer.tagList()
+          globalData.tagList = tagList.result && tagList.result.featureTagVoList
+        } catch (err) {
+          console.log('catch-error: get tagList fail', err)
+        }       
+      }   
+      this.originTagList = globalData.tagList || []
+      this.originStyleList = globalData.styleList || []
+      this.filterTagList = this.calFilterTagList() || []
+      if (this.filterTagList[0]) {
+        this.filterTagList[0].show = true
+      }
+      this.$apply()
+      console.log('测试-globalData', this)
+    }
+
+    // 计算变换后的taglist
+    calFilterTagList () {
+      return this.tagCanUseList.map(v => {
+        const tag = this.originTagList.find(k => {
+          // console.log(k, v)
+          return k.id == v
+        })
+        if (tag && tag.detailIdList) {
+          tag.styleList = []
+          tag.detailIdList.forEach(l => {
+            const style = this.originStyleList.find(j => {
+              return j.detailId == l
+            })
+            if (style) {
+              tag.styleList.push(style)
+            }              
+          })
+        }          
+        return tag
+      })
+    }
+
   }
 </script>

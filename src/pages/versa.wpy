@@ -123,9 +123,12 @@
           // const {tempFilePaths: [path]} = await wepy.chooseImage({count: 1,sizeType: ['compressed']})
           // const data = await base.upload(path)
           // console.log('测试-upload', data, typeof data)
-          const imageUrl = 'https://static01.versa-ai.com/upload/mini-program/transfer/fd30f49b558a1856.png'
-          const data = await styleTransfer.segment(imageUrl, 64)
-          console.log('测试-segment', data, typeof data)
+          // const imageUrl = 'https://static01.versa-ai.com/upload/mini-program/transfer/fd30f49b558a1856.png'
+          // const data = await styleTransfer.segment(imageUrl, 64)
+          // console.log('测试-segment', data, typeof data)
+
+          // const data = await styleTransfer.styleList()
+          // console.log('测试-styleList', data, typeof data)
 
         } catch (err) {
           console.log('err', err)
@@ -138,9 +141,22 @@
       
     }
 
-    onLoad() {
+    onLoad () {
       // 获取app实    
       // console.log('this-app', this.$wxapp)
+
+      // 提前获取标签和风格信息
+      this.initData()
+    }
+
+    async initData () {
+      const {globalData} = this.$parent
+      const styleList = await styleTransfer.styleList()
+      globalData.styleList = styleList.result
+
+      const tagList = await styleTransfer.tagList()
+      globalData.tagList = tagList.result && tagList.result.featureTagVoList
+      console.log('测试-globalData', globalData)
     }
   }
 </script>

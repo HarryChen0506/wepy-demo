@@ -1,6 +1,7 @@
 // http 请求的封装
 import wepy from 'wepy'
 import {base} from './service.js'
+import tool from '../utils/tool.js'
 
 // session管理
 const Session = {
@@ -41,6 +42,9 @@ function request (option = {}) {
   const session = Session.get()
   // console.log('session-get', typeof session, session)
   newOption.data[sessionName] = session
+  // newOption.url = tool.formatQueryUrl(newOption.url, {
+  //   [sessionName]: session
+  // })
   return new Promise(async function (resolve, reject) {
     try {
       let result = await wepy.request(newOption)

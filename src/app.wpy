@@ -25,8 +25,8 @@ export default class extends wepy.app {
   config = {
     pages: [
       'pages/style',
-      'pages/waiting',
       'pages/versa',
+      'pages/waiting',
       'pages/crop',
       'pages/base',
       'pages/changebg',
@@ -43,8 +43,10 @@ export default class extends wepy.app {
 
   globalData = {
     userInfo: null,
-    choosedImagePath: null,
-    cropedImagePath: null
+    choosedImagePath: null, // 选中后图片
+    cropedImagePath: null, // 裁剪后图片
+    tagList: null, // 标签列表
+    styleList: null // 风格列表
   }
 
   constructor () {

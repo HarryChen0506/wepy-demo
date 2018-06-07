@@ -9,10 +9,13 @@
       height: 160rpx;
       // margin-left: 10rpx;
     }
+    .style-item-wrap {
+      display: inline-block;
+    }
     .style-item {
       display: inline-block;
       margin-left: 20rpx;
-    }   
+    } 
   }
 </style>
 <template>
@@ -25,14 +28,16 @@
       >
       </image>
     </view>
-    <repeat wx-if="{{tag.show}}" for="{{tag.styleList}}" key="index" index="index" item="item">
-      <view class="style-item">
-        <styleButton
-          :item.sync="item"
-          @styleChange.user="onStyleChange"
-        ></styleButton>
-      </view>     
-    </repeat>    
+    <view class="style-item-wrap" wx-if="{{tag.show}}">
+      <repeat for="{{tag.styleList}}" key="index" index="index" item="item">
+        <view class="style-item">
+          <styleButton
+            :item.sync="item"
+            @styleChange.user="onStyleChange"
+          ></styleButton>
+        </view>     
+      </repeat>   
+    </view>     
   </view>
   
 </template>
@@ -42,6 +47,7 @@ import styleButton from '../styleButton/index'
 export default class StyleTag extends wepy.component {
   props = {
     tag: {},
+    index: {},
     currentStyle: {}
   }
 
@@ -49,18 +55,20 @@ export default class StyleTag extends wepy.component {
     styleButton: styleButton
   }
 
-  data = {   
+  data = {
+    boxShow: this.index === 0 
   }
 
   events = {}
 
   methods = {
-    toggle () {
-      console.log('toggle', this)
+    toggle () {     
+      // this.tag.show = true
       this.tag.show = !this.tag.show
+      // console.log('toggle', this.tag, this.tag.show)
     },
     onStyleChange (item) {
-      // console.log('styleTag receive enent: change style', item)
+      console.log('styleTag receive enent: change style', item)
       this.$emit('styleChange', item)
     }
   }
