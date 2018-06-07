@@ -75,7 +75,7 @@ export default class TypeButton extends wepy.component {
 
   methods = {
     toggle () {
-      console.log('toggle')
+      console.log('toggle', this)
       this.$emit('typeChange', this.type)
     }
   }

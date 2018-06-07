@@ -1,0 +1,68 @@
+<style lang="less" scoped>
+	.style-tag {
+    display: inline-block;
+    height: 160rpx;
+    margin-left: 20rpx;
+    .tag-title {
+      display: inline-block;
+      width: 80rpx;
+      height: 160rpx;
+      // margin-left: 10rpx;
+    }
+    .style-item {
+      display: inline-block;
+      margin-left: 20rpx;
+    }   
+  }
+</style>
+<template>
+  
+  <view class="style-tag">
+    <view class="tag-title" @tap="toggle">
+      <image 
+        style="width: 100%;height:100%"
+        src="{{tag.tagUrl}}"
+      >
+      </image>
+    </view>
+    <repeat wx-if="{{tag.show}}" for="{{tag.styleList}}" key="index" index="index" item="item">
+      <view class="style-item">
+        <styleButton
+          :item.sync="item"
+          @styleChange.user="onStyleChange"
+        ></styleButton>
+      </view>     
+    </repeat>    
+  </view>
+  
+</template>
+<script>
+import wepy from 'wepy'
+import styleButton from '../styleButton/index'
+export default class StyleTag extends wepy.component {
+  props = {
+    tag: {},
+    currentStyle: {}
+  }
+
+  components = {
+    styleButton: styleButton
+  }
+
+  data = {   
+  }
+
+  events = {}
+
+  methods = {
+    toggle () {
+      console.log('toggle', this)
+      this.tag.show = !this.tag.show
+    },
+    onStyleChange (item) {
+      // console.log('styleTag receive enent: change style', item)
+      this.$emit('styleChange', item)
+    }
+  }
+}
+</script>

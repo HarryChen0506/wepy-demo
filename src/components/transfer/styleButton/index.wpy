@@ -1,0 +1,75 @@
+<style lang="less" scoped>
+	.style-button {
+    display: inline-block;
+    width: 160rpx;
+    height: 160rpx;
+    background: yellow;
+    position: relative;
+    .bg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .tag {
+      position: absolute;
+      left: 20rpx;
+      bottom: 30rpx;
+      padding: 0 20rpx;
+      height: 36rpx;
+      line-height: 36rpx;
+      font-size: 20rpx;
+      color: #fff;
+      background: #000;
+      .icon {
+        margin-left: 10rpx;
+        display: inline-block;
+        width: 18rpx;
+        height: 18rpx;
+        background: red;
+        border-radius: 20rpx;
+      }
+    }
+  }
+</style>
+<template>
+  <view class="style-button" @tap="toggle">
+    <view class="bg">
+      <image
+        src="{{item.thumbnailUrl}}"
+        style="width: 100%;height:100%"
+      ></image>
+    </view>
+    <view class="tag">
+      <text class="title">{{item.title}}</text>
+      <text class="icon" wx-if="{{currentStyle.styleId === item.styleId}}"></text>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+export default class StyleButton extends wepy.component {
+  props = {
+    item: {}   
+  }
+
+  data = {
+     currentStyle: {}
+  }
+
+  events = {
+    setCurrentStyle (item) {
+      // console.log('接收事件', item)
+      this.currentStyle = item
+    }
+  }
+
+  methods = {
+    toggle () {
+      // console.log('toggle', this.item)
+      this.$emit('styleChange', this.item)
+    }
+  }
+}
+</script>

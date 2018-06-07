@@ -41,8 +41,10 @@
         justify-content:center;   
       }
       .style-wrap {
-        width: 90%;
+        width: 100%;
         height: 160rpx;
+        padding: 0 40rpx;
+        box-sizing: border-box;
         .scroll {
           width: 100%;
           height: 100%;
@@ -51,14 +53,10 @@
           .random-wrap {
             display: inline-block;
           }
-          .box {
-            display: inline-block;
-            width: 160rpx;
-            height: 160rpx;
-            background: pink;
-            margin-left: 20px;
-          }
         }
+      }
+      .share-wrap {
+        display: flex;
       }
     }
     .footer {
@@ -67,6 +65,21 @@
       flex-direction: column;
       align-items:center;
       justify-content:center;
+    }
+    .button {
+      width:320rpx;
+      height: 80rpx;
+      line-height: 80rpx;
+      color:white;
+      text-align: center;
+      border-radius:2px;
+      font-size:32rpx;
+      &.red {
+        background-color:#FF3366;
+      }
+      &.black {
+        background-color:#000;
+      }
     }
   }
 </style>
@@ -114,7 +127,6 @@
         <scroll-view 
           class="scroll"
           scroll-x='true' 
-          style="" 
         > 
           <view class="random-wrap">
             <randomStyle 
@@ -124,17 +136,20 @@
               :randomSelectStatus.sync="randomSelectStatus"
               @randomButton.user="onRandomSelect"
             ></randomStyle>
-          </view>          
-          <view class="box"></view>
-          <view class="box"></view>
-          <view class="box"></view>
-          <view class="box"></view>
+          </view>  
+          <repeat for="{{tagList}}" index="index" item="tag" key="key">
+            <styleTag 
+              :tag.sync="tag"
+              @styleChange.user="onStyleChange"
+            ></styleTag>
+          </repeat>  
         </scroll-view>
-        
-        <!-- <button @tap="onChooseStyle">自己选风格</button> -->
       </view>
-      <view class="share-wrap">
-        <button @tap="onChooseStyle">自己选风格</button>
+      <view class="share-wrap">        
+        <view class="button black">保存至相册</view>
+        <view class="button red" style="margin-left: 20rpx">分享</view>
+        <!-- <button @tap="onChooseStyle">自己选风格</button> -->
+        <!-- <text>当前风格：{{currentStyle.title}}</text> -->
       </view>
     </view>
     <view class="footer" wx:if="{{showResult}}">分享结果</view>
@@ -145,9 +160,55 @@
   import wepy from 'wepy'
   import typeButton from '../components/transfer/typeButton/index'
   import randomStyle from '../components/transfer/randomStyle/index'
+  import styleButton from '../components/transfer/styleButton/index'
+  import styleTag from '../components/transfer/styleTag/index'
   const mock = {
     selectButtonThumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
     selectStyleTitle: '田野的风',
+    groupList: [{
+      styleId: 12,
+      thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
+      title: '田野的风'
+    },{
+      styleId: 15,
+      thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
+      title: '三月'
+    }],
+    tagList: [{
+      id: 12,
+      tagCode:"recommend",
+      tagName: "推荐",
+      tagOrder: 1,
+      tagUrl: "http://static01.versa-ai.com/upload/prod/image/localization/f6d4385d-15e1-45aa-871d-767bd4cf496c.jpg",
+      styleList: [{
+        styleId: 12,
+        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
+        title: '田野的风'
+      },{
+        styleId: 15,
+        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
+        title: '三月'
+      }]
+    },{
+      id: 28,
+      tagCode:"watercolor",
+      tagName: "水彩",
+      tagOrder: 2,
+      tagUrl: "http://static01.versa-ai.com/upload/prod/image/localization/9b5ba6f8-e413-4823-bf69-97107a44184b.jpg",
+      styleList: [{
+        styleId: 45,
+        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
+        title: '测试的风'
+      },{
+        styleId: 46,
+        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
+        title: '测试的月'
+      },{
+        styleId: 47,
+        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
+        title: '测试的月444'
+      }]
+    }]
   }
   export default class Index extends wepy.page {
     config = {
@@ -156,7 +217,9 @@
     components = {
       typebuttonsegment: typeButton,
       typebuttoncolor: typeButton,
-      randomStyle: randomStyle
+      randomStyle: randomStyle,
+      styleButton: styleButton,
+      styleTag: styleTag
     }
 
     mixins = []
@@ -176,6 +239,10 @@
       selectStyleTitle: '', // 风格主题
       selectStatus: 'null', // 风格结果 'success' 'fail' 'null' 'loading'
       randomSelectStatus: 'null', // 随机按钮结果 'success' 'fail' 'null' 'loading'
+
+      groupList: mock.groupList,
+      tagList: mock.tagList,
+      currentStyle: {}
     }
 
     computed = {
@@ -215,6 +282,12 @@
           this.selectStatus = 'success'
           this.$apply()
         }, 2000);
+      },
+      onStyleChange (item) {
+        // console.log('page receive event: change style', item)
+        this.currentStyle = item;
+        // 广播事件
+        this.$broadcast('setCurrentStyle', this.currentStyle)
       }
     }
 

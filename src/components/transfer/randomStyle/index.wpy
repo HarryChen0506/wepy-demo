@@ -42,7 +42,7 @@
 </style>
 <template>
   <view class="random-component" @tap="click">
-    <image class="bg" src="./bg.png"></image>
+    <image class="bg" src="./bg.png" style="width:100%;height:100%"></image>
     <image class="thumbnail" wx-if="{{showThumbnail}}" src="{{randomSelectThumbnailUrl}}" mode="aspectFill"></image>
     <image class="icon" src="./icon.png"></image>
     <view class="title" wx-if="{{showText}}">
@@ -69,7 +69,7 @@ export default class RandomStyle extends wepy.component {
     randomSelectStatus: {
       type: String,
       default: 'null'
-    },
+    }
   }
 
   data = {
