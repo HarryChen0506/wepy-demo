@@ -29,9 +29,9 @@ export default class extends wepy.app {
       'pages/waiting',
       'pages/crop',
       'pages/base',
-      'pages/changebg',
-      'pages/gesture',
-      'pages/index'
+      // 'pages/changebg',
+      // 'pages/gesture',
+      // 'pages/index'
     ],
     window: {
       backgroundTextStyle: 'light',

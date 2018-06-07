@@ -150,7 +150,7 @@
 <template>
   <view 
     class="loading-{{frame}}"    
-    style="background-image:url('./loading-css-sprite.png');background-size:210rpx 11270rpx;width:190rpx;height:210rpx"
+    style="background-image:url('https://static01.versa-ai.com/mini-program/loading-css-sprite.png');background-size:210rpx 11270rpx;width:190rpx;height:210rpx"
   >
   </view>
 </template>
