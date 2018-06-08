@@ -156,8 +156,8 @@
         // "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
         // "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
       ]
-      // this.iamgePath = globalData.cropedImagePath || demo[0]
-      this.iamgePath =  demo[0]
+      this.iamgePath = globalData.cropedImagePath || demo[0]
+      // this.iamgePath =  demo[0]
       console.log('globalData', globalData)
       // this.segment(this.iamgePath, 64)
     }

@@ -156,6 +156,7 @@
 </template>
 <script>
 import wepy from 'wepy'
+import tool from '../../../utils/tool.js'
 export default class loading extends wepy.component {
   data = {
     frame: '00001',
@@ -168,7 +169,8 @@ export default class loading extends wepy.component {
   start () {
     this.intervalId = setInterval(() => {
       let frame = Math.floor((+new Date()) % (49 * 150) / 150)
-      frame = frame.toString().padStart(5, '0')
+      // frame = frame.toString().padStart(5, '0')
+      frame = tool.padStart(frame.toString(), 5, '0')
       if (frame !== this.frame) {
         this.frame = frame
         this.$apply()

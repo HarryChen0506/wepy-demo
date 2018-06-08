@@ -77,16 +77,16 @@
     components = {
       // panel: Panel,
     }
-
+    
     mixins = []
 
     data = {     
-      imgUrls: [
-        '../assets/images/s1.jpg',
-        '../assets/images/s2.jpg',
-        '../assets/images/s3.jpg',
-        '../assets/images/s4.jpg',
-        '../assets/images/s4.jpg'
+      imgUrls: [  
+        'https://static01.versa-ai.com/upload/default/image/a789fd19-92f4-4729-b41d-70c2a8d127e4.jpg',
+        'https://static01.versa-ai.com/upload/default/image/d411c857-6015-48cf-bf8a-ff9c3b94382f.jpg',
+        'https://static01.versa-ai.com/upload/default/image/28ef7b31-e63e-45a8-8412-c7ca0cb3107f.jpg',
+        'https://static01.versa-ai.com/upload/default/image/e42bfd0e-36ac-4465-92f6-cfc0385f24a3.jpg',
+        'https://static01.versa-ai.com/upload/default/image/db8d1742-0f94-4f8e-a6ec-e02b4c520e2d.jpg'
       ],
       autoplay: true,
       interval: 4000,

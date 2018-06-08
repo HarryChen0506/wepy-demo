@@ -179,8 +179,7 @@
       },
       ontouchmove: this.throttle( this.touchmove, 1000/60).bind(this),
       ontouchend (e) {
-        // console.log('ontouchend', e)
-        
+        // console.log('ontouchend', e)        
         if (e.touches.length === 0) {
           const {gesture, img, box} = this          
           const scale = img.scale

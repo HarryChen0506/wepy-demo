@@ -15,20 +15,23 @@
     .style-item {
       display: inline-block;
       margin-left: 20rpx;
-    } 
+    }
+    .hide {
+      display: none;
+    }
   }
 </style>
 <template>
   
   <view class="style-tag">
-    <view class="tag-title" @tap="toggle">
+    <view class="tag-title" @tap="toggle({{index}})">
       <image 
         style="width: 100%;height:100%"
         src="{{tag.tagUrl}}"
       >
       </image>
     </view>
-    <view class="style-item-wrap" wx-if="{{tag.show}}">
+    <view class="style-item-wrap {{!tagList[index] ? '' : 'hide'}}">
       <repeat for="{{tag.styleList}}" key="index" index="index" item="item">
         <view class="style-item">
           <styleButton
@@ -56,19 +59,30 @@ export default class StyleTag extends wepy.component {
   }
 
   data = {
-    boxShow: this.index === 0 
+    tagList: {}
   }
 
-  events = {}
+  events = {
+    tagShow (tagList) {
+      // console.log('tag组件接收事件', tagList)
+      this.tagList = tagList
+      // console.log('tagList', this.tagList)
+    }
+  }
 
   methods = {
-    toggle () {     
+    toggle (index) {     
       // this.tag.show = true
-      this.tag.show = !this.tag.show
-      // console.log('toggle', this.tag, this.tag.show)
+      // this.tag.show = !this.tag.show
+      // console.log('tag', this.tag, index, this.show)
+      this.$emit('showTagIndex', index)
+      // if (index === ) {
+      //   this.boxShow = 
+      // }
+      // console.log('toggle-tag', this.tag, this.tag.show)
     },
     onStyleChange (item) {
-      console.log('styleTag receive enent: change style', item)
+      // console.log('styleTag receive enent: change style', item)
       this.$emit('styleChange', item)
     }
   }

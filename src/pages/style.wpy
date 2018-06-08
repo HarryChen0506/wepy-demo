@@ -87,9 +87,10 @@
   <view class="page-style">
     <view class="header">
       <view class="image-wrap">
-        <image class="origin-class" src="{{originIamgePath}}"/>
+        <image class="origin-class" src="{{cropedImagePath}}"/>
+        <!-- 
         <image class="style-image"  wx-if="{{imageType === 'style-segment'}}"  src="{{styleSegmentPath}}"/>
-        <image class="style-image"  wx-if="{{imageType === 'style-unsegment'}}"  src="{{styleUnsegmentPath}}"/>
+        <image class="style-image"  wx-if="{{imageType === 'style-unsegment'}}"  src="{{styleUnsegmentPath}}"/> -->
       </view>
       <view class="loading-wrap">
       </view>
@@ -140,7 +141,9 @@
             <styleTag 
               :tag.sync="tag"
               :index.sync="index"
+              :show.sync="index"
               @styleChange.user="onStyleChange"
+              @showTagIndex="showTagIndex"
             ></styleTag>
           </repeat>  
         </scroll-view>
@@ -159,6 +162,7 @@
 <script>
   import wepy from 'wepy'
   import {styleTransfer, base} from '../services/service.js'
+  import {cacheStyle} from '../services/cache.js'
   import typeButton from '../components/transfer/typeButton/index'
   import randomStyle from '../components/transfer/randomStyle/index'
   import styleButton from '../components/transfer/styleButton/index'
@@ -166,50 +170,8 @@
   const mock = {
     selectButtonThumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
     selectStyleTitle: '田野的风',
-    groupList: [{
-      styleId: 12,
-      thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
-      title: '田野的风'
-    },{
-      styleId: 15,
-      thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
-      title: '三月'
-    }],
-    tagList: [{
-      id: 12,
-      tagCode:"recommend",
-      tagName: "推荐",
-      tagOrder: 1,
-      tagUrl: "http://static01.versa-ai.com/upload/prod/image/localization/f6d4385d-15e1-45aa-871d-767bd4cf496c.jpg",
-      styleList: [{
-        styleId: 12,
-        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
-        title: '田野的风'
-      },{
-        styleId: 15,
-        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
-        title: '三月'
-      }]
-    },{
-      id: 28,
-      tagCode:"watercolor",
-      tagName: "水彩",
-      tagOrder: 2,
-      tagUrl: "http://static01.versa-ai.com/upload/prod/image/localization/9b5ba6f8-e413-4823-bf69-97107a44184b.jpg",
-      styleList: [{
-        styleId: 45,
-        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
-        title: '测试的风'
-      },{
-        styleId: 46,
-        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
-        title: '测试的月'
-      },{
-        styleId: 47,
-        thumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b2040e7e-78e5-413a-afd9-7916b644d637.jpeg?x-oss-process=image/resize,h_200',
-        title: '测试的月444'
-      }]
-    }]
+    cropedImagePath: 'http://tmp/wx21630a5d4651096a.o6zAJsztn2DIgXEGteELseHpiOtU.1pt6jtQ6MgIb779bd49c491911729629c3064e1cb5f0.png',
+
   }
   export default class Index extends wepy.page {
     config = {
@@ -225,13 +187,18 @@
 
     mixins = []
 
-    data = {      
+    data = {
+      // 图片迁移相关
+
       hasSegmentButton: true,
       colorType: true,
       segmentType: false,
       showResult: false,
       imageType: '', // 'style-unsegment' 'raw-segment' 'raw-unsegment' 'style-segment'
-      originIamgePath: 'http://tmp/wx21630a5d4651096a.o6zAJsztn2DIgXEGteELseHpiOtU.1pt6jtQ6MgIb779bd49c491911729629c3064e1cb5f0.png',
+
+      cropedImagePath: '', // 本地保存的裁剪后照片
+      remoteCropedImagePath: '', // 远程保存的裁剪后照片
+
       styleSegmentPath: 'http://static01.versa-ai.com/images/render/render_1528254108192_1528254180.0760357.jpg',
       styleUnsegmentPath: 'http://static01.versa-ai.com/images/render/blend_1528254108192_1528254180.3011894.jpg',
 
@@ -245,7 +212,8 @@
       originTagList: [],
       originStyleList: [],
       filterTagList: [],
-      currentStyle: {}
+      currentStyle: {},
+      tagShowIndex: {}
     }
 
     computed = {}
@@ -297,12 +265,20 @@
     }
 
     events = {
-      
+      showTagIndex(index) {        
+        this.tagShowIndex[index] = !this.tagShowIndex[index]
+        // console.log('父组件接收事件', index, this.tagShowIndex)
+        this.$broadcast('tagShow', this.tagShowIndex)
+      }
     }
 
     onLoad() {
-      // console.log('onload-index')
+      const {globalData} = this.$parent
+      // 加载选择相关
       this.getListData()
+
+      // 获取图片
+      this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
     }
 
     async getListData () {
@@ -326,9 +302,7 @@
       this.originTagList = globalData.tagList || []
       this.originStyleList = globalData.styleList || []
       this.filterTagList = this.calFilterTagList() || []
-      if (this.filterTagList[0]) {
-        this.filterTagList[0].show = true
-      }
+      console.log('this.filterTagList', this.filterTagList)
       this.$apply()
       console.log('测试-globalData', this)
     }
@@ -347,12 +321,30 @@
               return j.detailId == l
             })
             if (style) {
-              tag.styleList.push(style)
+              const {backgroundUrl, brushAnimation, detailId, name, stylePicUrl} = style
+              const newStyle = {backgroundUrl, brushAnimation, detailId, name, stylePicUrl}
+              tag.styleList.push(newStyle)
             }              
           })
         }          
         return tag
       })
+    }
+
+    // 渲染相关
+    async segment (localImgPath, styleId) {
+      // 判断是否在缓存里
+      const cacheKey = `${localImgPath}_styleId_${styleId}`
+      if (cacheStyle.get(cacheKey)) {
+        console.log('get-cache', cacheStyle)
+        return cacheStyle.get(cacheKey)
+      }
+      // 先上传到静态服务器
+      const {url} = await base.upload(localImgPath)
+      // 再进行风格迁移
+      const data = await styleTransfer.segment(url, styleId)      
+      console.log('set-cache', cacheStyle)
+      return cacheStyle.set(cacheKey, data)
     }
 
   }
