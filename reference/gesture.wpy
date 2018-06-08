@@ -1,0 +1,224 @@
+  <style lang="less">
+    .move-wrap {
+      position: relative;
+      width:100%; 
+      height: 300px;
+      border: 1px solid #000;
+      box-sizing:border-box;
+      .move-box {  
+        position: absolute;
+        left: 0;
+        top: 0;
+        /* width:100px; 
+        height:100px;  */
+        background:pink;
+        /* transform: translate(50px,50px) */
+      }
+    }    
+    
+  </style>
+  <template>
+    <view class="container">
+      测试
+    </view>
+    <view class="move-wrap">
+        <view
+          class="move-box"
+          style="{{boxStyleStr}}"
+          @touchstart="touchStart"
+          @touchmove="touchMove"
+          @touchend="touchEnd"
+          @touchcancel="touchCancel"
+        >
+        <text>A</text>
+        </view>
+      </view>
+  </template>
+  
+  <script>
+  import wepy from 'wepy'
+  import WxTouchEvent from '../lib/wx-touch-event.js'
+  let demoTouchEvent = new WxTouchEvent()
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '手势页面'
+    }
+    components = {
+    }
+    data = {
+      box: {
+        width: 100,
+        height: 100
+      },
+      boxStyleStr: '',
+      transform: {
+        translate: {
+          x:0,
+          y:0,
+          z:0
+        },
+        rotate: {
+          x: 0,
+          y: 0,
+          z: 0,
+          angle: 0
+        },
+        scale: {
+          x: 1,
+          y: 1,
+          z: 0
+        }
+      }
+    }
+
+    computed = {
+    }
+    methods = {
+      touchStart: demoTouchEvent.start.bind(demoTouchEvent),
+      touchMove: demoTouchEvent.move.bind(demoTouchEvent),
+      touchEnd: demoTouchEvent.end.bind(demoTouchEvent),
+      touchCancel: demoTouchEvent.cancel.bind(demoTouchEvent)
+    }
+    events = {
+    }
+    onLoad() {
+      this.demoTouchEvent = demoTouchEvent
+      this.demoTouchEvent.bind({//初始化后绑定事件
+        swipe: function(e) {
+            // console.log(e);           
+        }.bind(this),
+        tap: function(e) {
+            // console.log(e);
+        }.bind(this),
+        rotate: function(e) {
+            // console.log(e)
+            this.changeRotate(e)
+        }.bind(this),
+        pinch: function(e) {
+            // console.log(e);
+            this.changeScale(e)
+        }.bind(this),
+        pressMove: function(e) {
+          // console.log('pressMove', e);
+          this.changeTranslate(e)
+        }.bind(this),
+      })
+      this.updateStyle()
+    }
+    // 改变位置
+    changeTranslate(e) {
+      if(e.type==='touchmove'){
+        // console.log('移动', e.type, e);
+        const {translate, rotate, scale} = this.transform;
+        this.transform = {
+          translate: {
+            x: translate.x + e.deltaX,
+            y: translate.y + e.deltaY,
+            z: translate.z
+          },
+          rotate: {
+            x: rotate.x,
+            y: rotate.y,
+            z: rotate.z,
+            angle: rotate.angle
+          },
+          scale: {
+            x: scale.x,
+            y: scale.y,
+            z: 0
+          }
+        }
+        
+        // console.log('transform', this.transform)
+        // this.updateStyle()
+        this.requestElementUpdate()
+      }
+    }
+    // 改变大小
+    changeScale(e) {    
+      if(e.type==='pinch'){
+        console.log('缩放', e.type, e)   
+        if(this.box.width*this.transform.scale.x * e.scale < 100){
+          console.log('太小了', this.transform)
+          return
+        }
+        const {translate, rotate, scale} = this.transform;
+        this.transform = {
+          translate: {
+            x: translate.x,
+            y: translate.y,
+            z: translate.z
+          },
+          rotate: {
+            x: rotate.x,
+            y: rotate.y,
+            z: rotate.z,
+            angle: rotate.angle
+          },
+          scale: {
+            x: e.scale,
+            y: e.scale,
+            z: 0
+          }
+        }
+        
+        this.requestElementUpdate()
+      }
+      // console.log('data', this.data.boxStyle)
+    }
+    // 改变旋转
+    changeRotate(e) {
+      if(e.type==='rotate'){
+        
+        const {translate, rotate, scale} = this.transform;
+        this.transform = {
+          translate: {
+            x: translate.x,
+            y: translate.y,
+            z: translate.z
+          },
+          rotate: {
+            x: rotate.x,
+            y: rotate.y,
+            z: rotate.z,
+            angle: rotate.angle + e.angle
+          },
+          scale: {
+            x: scale.x,
+            y: scale.y,
+            z: 0
+          }
+        }
+        console.log('旋转', this.transform)
+        this.requestElementUpdate()
+      }
+    }
+    updateStyle() {
+      let transform = this.transform;
+      var value = [
+          'translate3d(' + transform.translate.x + 'px, ' + transform.translate.y + 'px, 0)',
+          'scale(' + transform.scale.x + ', ' + transform.scale.y + ')',
+          'rotate('+ transform.rotate.angle + 'deg)'
+      ];
+      let boxStyleStr = 'transform:' + value.join(' ')
+      boxStyleStr += `;width:${this.box.width}px;height:${this.box.height}px`
+      this.boxStyleStr = boxStyleStr
+      // console.log('移动boxStyleStr', this.boxStyleStr);
+      this.$apply()
+      this.ticking = false
+    }
+    reqAnimationFrame(callback) {
+      if(this.timerId){
+        clearInterval(this.timerId)
+      }
+      this.timerId = setTimeout(callback, 1000 / 30)
+    }
+    requestElementUpdate() {
+      if(!this.ticking) {
+        this.reqAnimationFrame(this.updateStyle.bind(this));
+        this.ticking = true;
+      }
+    }
+
+  }
+  </script>

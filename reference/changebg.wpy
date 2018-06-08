@@ -1,0 +1,369 @@
+<style lang="less">
+  .page-container {
+    display: flex;
+    justify-content:center;
+  }
+  .move-wrap {
+    position: relative;
+    width:250px; 
+    height: 300px;
+    border: 1px solid #000;
+    box-sizing:border-box;
+    .bg-wrap {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: -1;
+    }
+  }    
+  .move-box {  
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    font-size: 0;
+    display: flex
+  }  
+  .canvas-box {
+    position: fixed;
+    opacity: 0;
+  }
+  
+</style>
+<template>
+  <view class="container">
+    测试    
+    <button class='color-white' @tap='save'>保存 </button>
+  </view>
+  <view class="page-container">
+    
+    <view class="move-wrap">
+        <view class="bg-wrap">
+          <image style="width: 250px; height: 300px;"  src="https://static01.versa-ai.com/upload/default/image/3df20a79-63ff-4557-8448-d28445d5faf9.jpg"/>
+        </view>  
+        <view
+          class="move-box"
+          style="transform: translate({{transform.translate.x}}px, {{transform.translate.y}}px) rotate({{transform.rotate.angle}}deg); width: {{box.width}}px;height: {{box.height}}px"
+          @touchstart="touchStart"
+          @touchmove="touchMove"
+          @touchend="touchEnd"
+          @touchcancel="touchCancel"
+        >    
+          <image style="width: {{box.width}}px;height: {{box.height}}px"  src="https://static01.versa-ai.com/upload/default/image/00323f24-3abe-40bb-922f-d763ef089de2.jpg"/>  
+        </view>
+      </view>
+  </view>  
+  <view>
+      <image style="width: 125px;height: 150px"  src="{{tempFilePath}}"/>  
+  </view>
+  <!-- canvas绘图 -->
+  <view class="canvas-box">
+    <canvas style="width:500px; height: 600px; border: 1px solid #000" canvas-id="mycanvas" />
+  </view>
+  <!-- canvas绘图 -->
+</template>
+
+<script>
+import wepy from 'wepy'
+import WxTouchEvent from '../lib/wx-touch-event.js'
+let demoTouchEvent = new WxTouchEvent()
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '换背景'
+  }
+  components = {
+  }
+  data = {
+    imgUrl: 'https://static01.versa-ai.com/upload/default/image/3df20a79-63ff-4557-8448-d28445d5faf9.jpg',
+    chosedImg: 'https://static01.versa-ai.com/upload/default/image/00323f24-3abe-40bb-922f-d763ef089de2.jpg',
+    tempFilePath: '',
+    localFile: {
+      bg_tempFilePath: '',
+      box_tempFilePath: ''
+    },
+    box: {
+      originWidth: 80,
+      originHeight: 80,
+      width: 80,
+      height: 80
+    },
+    boxStyleStr: '',
+    transform: {
+      translate: {
+        x:150,
+        y:50,
+        z:0
+      },
+      rotate: {
+        x: 0,
+        y: 0,
+        z: 0,
+        angle: 0
+      },
+      scale: {
+        x: 1,
+        y: 1,
+        z: 0
+      }
+    },
+    
+  }
+
+  computed = {
+  }
+  methods = {
+    touchStart: demoTouchEvent.start.bind(demoTouchEvent),
+    touchMove: demoTouchEvent.move.bind(demoTouchEvent),
+    touchEnd: demoTouchEvent.end.bind(demoTouchEvent),
+    touchCancel: demoTouchEvent.cancel.bind(demoTouchEvent)
+  }
+  events = {
+  }
+  onLoad() {
+    this.demoTouchEvent = demoTouchEvent
+    this.demoTouchEvent.bind({//初始化后绑定事件
+      swipe: function(e) {
+          // console.log(e);           
+      }.bind(this),
+      tap: function(e) {
+          // console.log(e);
+      }.bind(this),
+      rotate: function(e) {
+          // console.log(e)
+          this.changeRotate(e)
+      }.bind(this),
+      pinch: function(e) {
+          // console.log(e);
+          this.changeScale(e)
+      }.bind(this),
+      pressMove: function(e) {
+        // console.log('pressMove', e);
+        this.changeTranslate(e)
+      }.bind(this),
+    })
+    this.updateStyle()
+    // 预下载图片
+    var _this = this;
+    wx.downloadFile({
+      url: this.chosedImg, //仅为示例，并非真实的资源
+      success: function(res) {
+        // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+        if (res.statusCode === 200) {
+          console.log('downLoad-box', res.tempFilePath)
+          _this.localFile.box_tempFilePath = res.tempFilePath;
+          _this.$apply()
+        }
+      }
+    })
+
+    wx.downloadFile({
+      url: this.imgUrl, //仅为示例，并非真实的资源
+      success: function(res) {
+        // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+        if (res.statusCode === 200) {
+          console.log('downLoad-bg', res.tempFilePath)
+          _this.localFile.bg_tempFilePath = res.tempFilePath;
+          _this.$apply()
+        }
+      }
+    })
+
+  }
+  // 改变位置
+  changeTranslate(e) {
+    if(e.type==='touchmove'){
+      // console.log('移动', e.type, e);
+      const {translate, rotate, scale} = this.transform;
+      this.transform = {
+        translate: {
+          x: translate.x + e.deltaX,
+          y: translate.y + e.deltaY,
+          z: translate.z
+        },
+        rotate: {
+          x: rotate.x,
+          y: rotate.y,
+          z: rotate.z,
+          angle: rotate.angle
+        },
+        scale: {
+          x: scale.x,
+          y: scale.y,
+          z: 0
+        }
+      }
+      
+      // console.log('transform', this.transform)
+      // this.updateStyle()
+      this.requestElementUpdate()
+    }
+  }
+  // 改变大小
+  changeScale(e) {    
+    if(e.type==='pinch'){
+      console.log('缩放', e.type, e)   
+      // if(this.box.width*this.transform.scale.x * e.scale < 100){
+      //   console.log('太小了', this.transform)
+      //   return
+      // }
+      const {translate, rotate, scale} = this.transform
+      this.box.width = e.scale * this.box.originWidth
+      this.box.height = e.scale * this.box.originHeight
+      console.log('scale', e.scale)
+      this.transform = {
+        translate: {
+          x: translate.x,
+          y: translate.y,
+          z: translate.z
+        },
+        rotate: {
+          x: rotate.x,
+          y: rotate.y,
+          z: rotate.z,
+          angle: rotate.angle
+        },
+        scale: {
+          x: e.scale,
+          y: e.scale,
+          z: 0
+        }
+      }
+      
+      this.requestElementUpdate()
+    }
+    // console.log('data', this.data.boxStyle)
+  }
+  // 改变旋转
+  changeRotate(e) {
+    if(e.type==='rotate'){
+      
+      const {translate, rotate, scale} = this.transform;
+      this.transform = {
+        translate: {
+          x: translate.x,
+          y: translate.y,
+          z: translate.z
+        },
+        rotate: {
+          x: rotate.x,
+          y: rotate.y,
+          z: rotate.z,
+          angle: rotate.angle + e.angle
+        },
+        scale: {
+          x: scale.x,
+          y: scale.y,
+          z: 0
+        }
+      }
+      console.log('旋转', this.transform)
+      this.requestElementUpdate()
+    }
+  }
+  updateStyle() {
+    let transform = this.transform;
+    var value = [
+        'translate3d(' + transform.translate.x + 'px, ' + transform.translate.y + 'px, 0)',
+        'scale(' + transform.scale.x + ', ' + transform.scale.y + ')',
+        'rotate('+ transform.rotate.angle + 'deg)'
+    ];
+    let boxStyleStr = 'transform:' + value.join(' ')
+    boxStyleStr += `;width:${this.box.width}px;height:${this.box.height}px`
+    this.boxStyleStr = boxStyleStr
+    // console.log('移动boxStyleStr', this.boxStyleStr);
+    this.$apply()
+    this.ticking = false
+  }
+  reqAnimationFrame(callback) {
+    if(this.timerId){
+      clearInterval(this.timerId)
+    }
+    this.timerId = setTimeout(callback, 1000 / 30)
+  }
+  requestElementUpdate() {
+    if(!this.ticking) {
+      this.reqAnimationFrame(this.updateStyle.bind(this));
+      this.ticking = true;
+    }
+  }
+
+  //将canvas转换为图片保存到本地，然后将图片路径传给image图片的src
+  createNewImg (imgUrl) {
+    var that = this;
+    var chosedImg = this.data.chosedImg;
+    var path = imgUrl;
+    var context = wx.createCanvasContext('mycanvas');
+
+    //防止锯齿，绘的图片是所需图片的两倍
+    // wx.chooseImage({
+    //   success: function(res){
+    //     context.drawImage(res.tempFilePaths[0], 0, 0, 150, 100)
+    //     context.draw()
+    //   }
+    // })
+      
+    context.drawImage(this.localFile.bg_tempFilePath, 0, 0, 500, 600);
+    //如果有贴纸则绘制贴纸
+    if (this.data.localFile.box_tempFilePath) {   
+      this.setSticker(context);
+    }
+    // //绘制图片
+    //将生成好的图片保存到本地，需要延迟一会，绘制期间耗时
+    setTimeout(function () {
+      wx.canvasToTempFilePath({
+        canvasId: 'mycanvas',
+        success: function (res) {
+          var tempFilePath = res.tempFilePath;
+              console.log('canvas-tempFilePath', tempFilePath);
+              that.tempFilePath = tempFilePath;
+              that.$apply()
+              // wx.navigateTo({
+              //   url: '/pages/detail/detail?path=' + tempFilePath,
+              // })
+        },
+        fail: function (res) {
+          console.log(res);
+        },
+        complete:function(e){
+          wx.hideLoading();
+        }
+      });
+    }, 1000);
+    
+    
+   
+
+  }
+  //将贴纸绘制到canvas的固定
+  setSticker (context) {
+    var Sticker = this.data.localFile.box_tempFilePath;
+    console.log('Sticker', Sticker)
+    var newleft = this.data.transform.translate.x * 2;
+    var newtop = this.data.transform.translate.y * 2;
+
+    var newwidth = this.data.box.width * 2;
+    var newheight = this.data.box.height * 2;
+    var newRotate = this.data.transform.rotate.angle
+    context.save(); 
+    context.translate(newleft + 0.5 * newwidth, newtop + 0.5 * newheight );
+    context.rotate(newRotate * Math.PI / 180);  
+    
+    context.drawImage(Sticker, -0.5 * newwidth, -0.5 * newheight, newwidth, newheight) 
+    context.restore();
+    context.stroke();
+    context.draw()
+  }
+
+  //点击保存按钮
+  save () {
+    var that = this
+    wx.showLoading({
+      title: '创建中...',
+      duration: 1000,
+    })
+    var imgUrl = that.data.imgUrl
+    that.createNewImg(imgUrl);
+  }
+
+}
+</script>

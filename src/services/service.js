@@ -113,9 +113,10 @@ export const styleTransfer = {
     }
     return http.request(reqData)
   },
-  segment: function (remoteImgUrl, styleId) {
+  segment: function (remoteImgUrl, styleId, originalColors) {
     // remoteImgUrl 远程静态服务器图片地址
     // styleId 渲染风格Id
+    // originalColors 原色 ,不传默认为风格色
     const reqData = {
       method: 'POST',
       url: `${getHost()}/web/image/render/segment`,
@@ -124,9 +125,11 @@ export const styleTransfer = {
         clientType: 'mini-program',
         timestamp: Date.parse(new Date()),
         imageUrl: remoteImgUrl,
-        styleId,
-        originalColors: 'Y'
+        styleId
       }
+    }
+    if (originalColors) {
+      reqData.data.originalColors = 'Y'
     }
     return http.request(reqData)
   },

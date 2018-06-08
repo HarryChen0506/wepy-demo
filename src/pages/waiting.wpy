@@ -164,6 +164,7 @@
     onShowLoading () {
       this.showLoading = true
       this.$invoke('loading', 'onShow');
+      wx.navigateTo({url: `/pages/style`})
     }
     onHideLoading () {
       this.showLoading = false

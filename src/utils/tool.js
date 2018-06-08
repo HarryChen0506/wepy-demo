@@ -110,6 +110,13 @@ const tool = {
       }
       return padString.slice(0, targetLength) + String(targetStr)
     }
+  },
+  createRandom: function (start, end) {
+    // 生成指定范围的随机数,包含start和end
+    // start 开始
+    // end 结束
+    const length = end - start + 1
+    return start + Math.floor((Math.random() * length))
   }
 }
 

@@ -19,6 +19,16 @@
         position: absolute;
         top: 0;
         left: 0;
+        overflow: hidden;
+        .origin-image {
+          filter: blur(10px);
+        }
+        .render-image {
+          opacity: 0;
+        }
+        .show {
+          opacity: 1;
+        }
         image {
           width: 100%;
           height: 100%;
@@ -87,10 +97,11 @@
   <view class="page-style">
     <view class="header">
       <view class="image-wrap">
-        <image class="origin-class" src="{{cropedImagePath}}"/>
-        <!-- 
-        <image class="style-image"  wx-if="{{imageType === 'style-segment'}}"  src="{{styleSegmentPath}}"/>
-        <image class="style-image"  wx-if="{{imageType === 'style-unsegment'}}"  src="{{styleUnsegmentPath}}"/> -->
+        <image class="origin-image" src="{{cropedImagePath}}"/>        
+        <image class="render-image {{imageType === 'color-unsegment'?'show':''}}" src="{{renderResult.color.renderUrl}}"/>
+        <image class="render-image {{imageType === 'color-segment'?'show':''}}" src="{{renderResult.color.targetUrl}}"/>
+        <image class="render-image {{imageType === 'raw-unsegment'?'show':''}}" src="{{renderResult.raw.renderUrl}}"/>
+        <image class="render-image {{imageType === 'raw-segment'?'show':''}}" src="{{renderResult.raw.targetUrl}}"/>
       </view>
       <view class="loading-wrap">
       </view>
@@ -120,8 +131,7 @@
             <image slot="selectedIcon" mode="scaleToFill" src="../assets/images/color-icon.png" style="width:48rpx; height:48rpx"></image>
             <image slot="unSelectedIcon" mode="scaleToFill" src="../assets/images/rawcolor-icon.png" style="width:48rpx; height:48rpx"></image>
           </typebuttoncolor> 
-        </view>       
-               
+        </view>
       </view>
       <view class="style-wrap">
         <scroll-view 
@@ -162,6 +172,7 @@
 <script>
   import wepy from 'wepy'
   import {styleTransfer, base} from '../services/service.js'
+  import tool from '../utils/tool.js'
   import {cacheStyle} from '../services/cache.js'
   import typeButton from '../components/transfer/typeButton/index'
   import randomStyle from '../components/transfer/randomStyle/index'
@@ -194,13 +205,13 @@
       colorType: true,
       segmentType: false,
       showResult: false,
-      imageType: '', // 'style-unsegment' 'raw-segment' 'raw-unsegment' 'style-segment'
+      imageType: 'color-unsegment', // 'color-unsegment' 'raw-segment' 'raw-unsegment' 'color-segment'
 
       cropedImagePath: '', // 本地保存的裁剪后照片
-      remoteCropedImagePath: '', // 远程保存的裁剪后照片
-
-      styleSegmentPath: 'http://static01.versa-ai.com/images/render/render_1528254108192_1528254180.0760357.jpg',
-      styleUnsegmentPath: 'http://static01.versa-ai.com/images/render/blend_1528254108192_1528254180.3011894.jpg',
+      renderResult: { // 选然后的结果
+        color: {},
+        raw: {}
+      },
 
       selectButtonType: 'random', // 选择按钮类型
       selectButtonThumbnailUrl: '', // 风格缩略图
@@ -208,12 +219,10 @@
       selectStatus: 'null', // 风格结果 'success' 'fail' 'null' 'loading'
       randomSelectStatus: 'null', // 随机按钮结果 'success' 'fail' 'null' 'loading'
 
-      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34],
-      originTagList: [],
-      originStyleList: [],
+      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],      
       filterTagList: [],
       currentStyle: {},
-      tagShowIndex: {}
+      tagShowIndex: {} // 控制tag标签隐藏
     }
 
     computed = {}
@@ -231,7 +240,9 @@
           this.colorType = !this.colorType
         } else if (type === 'segmentType') {
           this.segmentType = !this.segmentType
-        }        
+        }
+        this.imageType = `${this.colorType?'color':'raw'}-${this.segmentType?'segment':'unsegment'}`
+        this.$apply()     
       },
       onRandomSelect () {
         console.log('随机选择')        
@@ -272,16 +283,17 @@
       }
     }
 
-    onLoad() {
-      const {globalData} = this.$parent
+    async onLoad() {      
       // 加载选择相关
-      this.getListData()
+      console.log('style-load')
+      await this.getListData()
 
-      // 获取图片
-      this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
+      // 初次渲染
+      await this.randomRender()
     }
 
     async getListData () {
+      console.log('getListData')      
       const {globalData} = this.$parent
       if (!globalData.styleList) {
         try {
@@ -299,27 +311,35 @@
           console.log('catch-error: get tagList fail', err)
         }       
       }   
-      this.originTagList = globalData.tagList || []
-      this.originStyleList = globalData.styleList || []
-      this.filterTagList = this.calFilterTagList() || []
+      // this.filterTagList = this.calFilterTagList([12, 29, 27, 28, 33, 32, 31,30, 34, 1], globalData.tagList, globalData.styleList) || []
+      this.filterTagList = this.calFilterTagList(this.tagCanUseList, globalData.tagList, globalData.styleList) || []
       console.log('this.filterTagList', this.filterTagList)
-      this.$apply()
+      // this.$apply()
       console.log('测试-globalData', this)
+      // wx.showToast({
+      //   title: 'getListData',
+      //   icon: 'success',
+      //   duration: 4000
+      // })
     }
 
     // 计算变换后的taglist
-    calFilterTagList () {
-      return this.tagCanUseList.map(v => {
-        const tag = this.originTagList.find(k => {
+    oldCalFilterTagList (tagCanUseList = [], originTagList = [], originStyleList = []) {
+      let tagList = []
+      tagCanUseList.forEach(v => {
+        const tag = originTagList.find(k => {
           // console.log(k, v)
           return k.id == v
         })
+        // console.log('tag', tag)
         if (tag && tag.detailIdList) {
           tag.styleList = []
+          // console.log('tag.detailIdList', tag.detailIdList)
           tag.detailIdList.forEach(l => {
-            const style = this.originStyleList.find(j => {
+            const style = originStyleList.find(j => {
               return j.detailId == l
             })
+            // console.log('style', style)
             if (style) {
               const {backgroundUrl, brushAnimation, detailId, name, stylePicUrl} = style
               const newStyle = {backgroundUrl, brushAnimation, detailId, name, stylePicUrl}
@@ -327,11 +347,64 @@
             }              
           })
         }          
-        return tag
+        if (tag){
+          tagList.push(tag)
+        }
       })
+      return tagList
+    }
+
+    // 新的计算方法
+    calFilterTagList (tagCanUseList = [], originTagList = [], originStyleList = []) { 
+      const newTagList = originTagList.filter(v => {
+        return tagCanUseList.indexOf(v.id) > -1
+      })
+      newTagList.forEach(v => {
+        v.styleList = []
+        v.detailIdList.forEach(id => {
+          let style = originStyleList.filter(k => {
+            return k.detailId === id
+          })[0]
+          if (style) {
+            v.styleList.push(style)
+          }    
+        })  
+      })
+      return newTagList
     }
 
     // 渲染相关
+    async initRender () {
+      const {globalData} = this.$parent
+      // 获取图片
+      this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
+      console.log('cropedImagePath', this.cropedImagePath)
+      const renderResult = await this.segment(this.cropedImagePath, 124)
+      console.log('renderResult', renderResult)
+      this.$apply()
+    }
+
+    // 随机处理
+
+    async randomRender (localImgPath) {
+      console.log('randomRender')
+      const {globalData} = this.$parent
+      // 获取图片
+      this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
+      // console.log('cropedImagePath', this.cropedImagePath)     
+      const {filterTagList} = this
+      // console.log('filterTagList', filterTagList)
+      const randomTagIndex = tool.createRandom(0, filterTagList.length -1)
+      // console.log('randomTagIndex', randomTagIndex)
+      const randomStyleIndex = tool.createRandom(0, filterTagList[randomTagIndex].styleList.length - 1)
+      // console.log('randomStyleIndex', randomStyleIndex)
+      this.currentStyle = filterTagList[randomTagIndex].styleList[randomStyleIndex]
+      console.log('随机选择后的当前风格', this.currentStyle)
+      this.renderResult = await this.segment(this.cropedImagePath, this.currentStyle.detailId)
+      console.log('renderResult', this.renderResult)
+      this.$apply()
+    }
+
     async segment (localImgPath, styleId) {
       // 判断是否在缓存里
       const cacheKey = `${localImgPath}_styleId_${styleId}`
@@ -340,11 +413,39 @@
         return cacheStyle.get(cacheKey)
       }
       // 先上传到静态服务器
-      const {url} = await base.upload(localImgPath)
+      let remoteImageUrl
+      try {
+        const {url} = await base.upload(localImgPath)
+        remoteImageUrl = url
+      } catch (err) {
+        console.log('上传图片失败', err)
+      }
+      
       // 再进行风格迁移
-      const data = await styleTransfer.segment(url, styleId)      
+      let colorData, rawData
+      try {
+        colorData = await styleTransfer.segment(remoteImageUrl, styleId)        
+      } catch (err) {
+        console.log('风格色渲染失败', err)
+        return false
+      }
+
+      try {
+        rawData = await styleTransfer.segment(remoteImageUrl, styleId, true)
+      } catch (err) {
+        console.log('原色渲染失败', err)
+        return false
+      }   
+
+      function hasSegmentButton (data) {
+        return data.result.renderUrl !== data.result.targetUrl
+      }
       console.log('set-cache', cacheStyle)
-      return cacheStyle.set(cacheKey, data)
+      return cacheStyle.set(cacheKey, {
+        color: colorData.result,
+        raw: rawData.result,
+        hasSegmentButton: hasSegmentButton(colorData)
+      })
     }
 
   }
