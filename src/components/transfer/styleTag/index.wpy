@@ -24,14 +24,14 @@
 <template>
   
   <view class="style-tag">
-    <view class="tag-title" @tap="toggle({{index}})">
+    <view class="tag-title" @tap="toggle()">
       <image 
         style="width: 100%;height:100%"
         src="{{tag.tagUrl}}"
       >
       </image>
     </view>
-    <view class="style-item-wrap {{!tagList[index] ? '' : 'hide'}}">
+    <view class="style-item-wrap {{!tag.hide ? '' : 'hide'}}">
       <repeat for="{{tag.styleList}}" key="index" index="index" item="item">
         <view class="style-item">
           <styleButton
@@ -71,15 +71,8 @@ export default class StyleTag extends wepy.component {
   }
 
   methods = {
-    toggle (index) {     
-      // this.tag.show = true
-      // this.tag.show = !this.tag.show
-      // console.log('tag', this.tag, index, this.show)
-      this.$emit('showTagIndex', index)
-      // if (index === ) {
-      //   this.boxShow = 
-      // }
-      // console.log('toggle-tag', this.tag, this.tag.show)
+    toggle () {  
+      this.tag.hide = !this.tag.hide
     },
     onStyleChange (item) {
       // console.log('styleTag receive enent: change style', item)
