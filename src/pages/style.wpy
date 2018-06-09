@@ -22,19 +22,51 @@
         overflow: hidden;
         .origin-image {
           // filter: blur(5px);
+          z-index: 0
         }
         .render-image {
           opacity: 0;
+          z-index: 1
         }
         .show {
           opacity: 1;
+          // z-index: 2
         }
         image {
           width: 100%;
           height: 100%;
           position: absolute;
           top: 0;
-          left: 0;
+          left: 0;          
+        }
+      }
+      .loading-wrap {        
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2; 
+        .bg {
+          position: absolute;
+          top:0;
+          left:0;
+          z-index: 1;
+          width: 100%;
+          height: 100%;
+          background: rgba(220, 220, 220, 0.8);
+        }
+        .loading {
+          position: absolute;
+          top:0;
+          left:0;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items:center;
         }
       }
     }
@@ -161,13 +193,17 @@
     <view class="header">
       <view class="image-wrap">
         <image class="origin-image" src="{{cropedImagePath}}"/>        
-        <image class="render-image {{imageType === 'color-unsegment' ? 'show' : ''}}" src="{{renderResult.color.renderUrl}}"/>
-        <image class="render-image {{imageType === 'color-segment' ? 'show' : ''}}" src="{{renderResult.color.targetUrl}}"/>
-        <image class="render-image {{imageType === 'raw-unsegment' ? 'show' : ''}}" src="{{renderResult.raw.renderUrl}}"/>
-        <image class="render-image {{imageType === 'raw-segment' ? 'show' : ''}}" src="{{renderResult.raw.targetUrl}}"/>
+        <image class="render-image {{imageType === 'color-unsegment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.color.renderUrl && (renderResult.color.renderUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('color-unsegment')"/>
+        <image class="render-image {{imageType === 'color-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.color.renderUrl && (renderResult.color.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('color-segment')"/>
+        <image class="render-image {{imageType === 'raw-unsegment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.renderUrl && (renderResult.raw.renderUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-unsegment')"/>
+        <image class="render-image {{imageType === 'raw-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.targetUrl && (renderResult.raw.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-segment')"/>        
       </view>
-      <view class="loading-wrap">
-      </view>
+      <view class="loading-wrap" wx-if="{{renderStatus === 'loading'}}">
+        <view class="bg"></view>
+        <view class="loading">
+          <loading></loading>
+        </view> 
+      </view> 
     </view>
     <view class="main" wx:if="{{!showResult}}">
       <view class="type-wrap">
@@ -193,14 +229,6 @@
           class="scroll"
           scroll-x='true' 
         > 
-        
-          <!-- <randomStyle 
-            :selectButtonType.sync="selectButtonType"
-            :randomSelectThumbnailUrl.sync="currentStyle.stylePicUrl"
-            :randomSelectTitle.sync="currentStyle.name"
-            :randomSelectStatus.sync="randomSelectStatus"
-            @randomButton.user="onRandomSelect"
-          ></randomStyle> -->
           <!-- 随机按钮 -->
           <view class="random-component" @tap="onRandomSelect">
             <image class="bg" src="../assets/images/random-bg.png" style="width:100%;height:100%"></image>
@@ -235,7 +263,7 @@
   import {styleTransfer, base} from '../services/service.js'
   import tool from '../utils/tool.js'
   import {cacheStyle} from '../services/cache.js'
-  import randomStyle from '../components/transfer/randomStyle/index'
+  import loading from '../components/transfer/loading/index'
   import styleTag from '../components/transfer/styleTag/index'
   const mock = {
     selectButtonThumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
@@ -247,9 +275,9 @@
     config = {
       navigationBarTitleText: '风格渲染'
     }
-    components = {    
-      randomStyle: randomStyle,
-      styleTag: styleTag
+    components = { 
+      styleTag: styleTag,
+      loading: loading
     }
 
     mixins = []
@@ -260,6 +288,7 @@
       colorType: true,
       segmentType: false,     
       imageType: 'color-unsegment', // 'color-unsegment' 'raw-segment' 'raw-unsegment' 'color-segment'
+      imageLoaded: false,
       
       // 图片渲染相关
       cropedImagePath: '', // 本地保存的裁剪后照片
@@ -310,6 +339,14 @@
         this.currentStyle = item;
         // 广播事件
         this.$broadcast('setCurrentStyle', this.currentStyle)
+      },
+      imageLoad (currentImageType) {
+        if (this.imageType === currentImageType) {
+          console.log('图片下载成功', currentImageType, this.renderStatus)
+          this.imageLoaded = true
+          this.renderStatus = 'success'
+          console.log('关闭loading')
+        }        
       }
     }
 
@@ -379,10 +416,6 @@
 
     // 计算随机按钮样式
     calRandomButtonStyle () {
-      // selectButtonType: '', // 选择按钮类型
-      // showRandomButtonImage: false, // 默认不显示随机按钮风格图
-      // showRandomButtonText: true,   // 默认显示标题
-      // selectStatus: 'null', // 风格结果 'success' 'fail' 'null' 'loading'
       if (this.selectButtonType === 'random') {
         this.showRandomButtonImage = true
         this.showRandomButtonText = true
@@ -413,9 +446,10 @@
       const {filterTagList} = this
       const randomTagIndex = tool.createRandom(0, filterTagList.length -1)
       const randomStyleIndex = tool.createRandom(0, filterTagList[randomTagIndex].styleList.length - 1)
-      this.currentStyle = filterTagList[randomTagIndex].styleList[randomStyleIndex]
-      console.log('随机选择后的当前风格', this.currentStyle)
-      this.renderResult = await this.segment(this.cropedImagePath, this.currentStyle.detailId)
+      const currentStyle = filterTagList[randomTagIndex].styleList[randomStyleIndex]
+      console.log('随机选择后的当前风格', currentStyle)
+      this.renderResult = await this.segment(this.cropedImagePath, currentStyle.detailId)
+      this.currentStyle = currentStyle
       console.log('renderResult', this.renderResult)
       this.$apply()
     }
@@ -454,13 +488,14 @@
       let allSegmentData = []
       try {
         this.renderStatus = 'loading'
+        this.imageLoaded = false
         allSegmentData = await styleTransfer.allSegment(remoteImageUrl, styleId)
       } catch (err) {
         console.log('风格迁移失败', err)
         this.renderStatus = 'fail'
         return 
       }
-      this.renderStatus = 'success'
+      // this.renderStatus = 'success'
       // console.log('allSegmentData', allSegmentData) 
 
       function hasSegmentButton (data) {
