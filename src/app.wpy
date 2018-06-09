@@ -46,7 +46,8 @@ export default class extends wepy.app {
     choosedImagePath: null, // 选中后图片
     cropedImagePath: null, // 裁剪后图片
     tagList: null, // 标签列表
-    styleList: null // 风格列表
+    styleList: null, // 风格列表
+    filterTagList: null
   }
 
   constructor () {

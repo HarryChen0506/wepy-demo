@@ -133,6 +133,12 @@ export const styleTransfer = {
     }
     return http.request(reqData)
   },
+  allSegment: function (remoteImgUrl, styleId) {
+    // 风格和原色两种渲染
+    let colorSegment = this.segment(remoteImgUrl, styleId)
+    let rawSegment = this.segment(remoteImgUrl, styleId, true)
+    return Promise.all([colorSegment, rawSegment])
+  },
   tagList: function () {
     // 获取风格标签列表
     const reqData = {

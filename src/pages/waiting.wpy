@@ -100,9 +100,35 @@
 
 <script>
   import wepy from 'wepy'
+  import tool from '../utils/tool.js'
   import {styleTransfer, base} from '../services/service.js'
   import {cacheStyle} from '../services/cache.js'
   import loading from '../components/transfer/loading/index'
+  // 计算风格标签数组
+  const calFilterTagList = function (tagCanUseList = [], originTagList = [], originStyleList = []) { 
+    originTagList = tool.deepClone(originTagList)
+    originStyleList = tool.deepClone(originStyleList)
+    const newTagList = originTagList.filter(v => {
+      return tagCanUseList.indexOf(v.id) > -1
+    })
+    newTagList.forEach(v => {
+      // v.tagCode = ''
+      // v.tagName = ''
+      // v.tagOrder = ''
+      v.styleList = []
+      v.detailIdList.forEach(id => {
+        let style = originStyleList.filter(k => {
+          return k.detailId === id
+        })[0]
+        if (style) {
+          const {backgroundUrl, brushAnimation, detailId, name, stylePicUrl} = style
+          const newStyle = {backgroundUrl, brushAnimation, detailId, name, stylePicUrl}
+          v.styleList.push(newStyle)
+        }    
+      })  
+    })
+    return newTagList
+  }
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: 'waiting'
@@ -115,7 +141,8 @@
 
     data = {     
       iamgePath: '',
-      showLoading: false
+      showLoading: false,
+      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1]
     }
 
     computed = {
@@ -137,8 +164,10 @@
       test2 () {
         this.segment(this.iamgePath, 124)
       },
-      show () {
+      async show () {
         this.onShowLoading()
+        await this.getTagList()
+        wx.navigateTo({url: `/pages/style`})
       },
       hide () {
         this.onHideLoading()
@@ -164,7 +193,6 @@
     onShowLoading () {
       this.showLoading = true
       this.$invoke('loading', 'onShow');
-      wx.navigateTo({url: `/pages/style`})
     }
     onHideLoading () {
       this.showLoading = false
@@ -183,6 +211,27 @@
       const data = await styleTransfer.segment(url, styleId)      
       console.log('set-cache', cacheStyle)
       return cacheStyle.set(cacheKey, data)
+    }
+    async getTagList () {
+      const {globalData} = this.$parent
+      if (!globalData.styleList) {
+        try {
+          const styleList = await styleTransfer.styleList()
+          globalData.styleList = styleList.result
+        } catch (err) {
+          console.log('catch-error: get styleList fail', err)
+        }        
+      }
+      if (!globalData.tagList) {
+        try {
+          const tagList = await styleTransfer.tagList()
+          globalData.tagList = tagList.result && tagList.result.featureTagVoList
+        } catch (err) {
+          console.log('catch-error: get tagList fail', err)
+        }       
+      }   
+      // this.filterTagList = this.calFilterTagList([12, 29, 27, 28, 33, 32, 31,30, 34, 1], globalData.tagList, globalData.styleList) || []
+      globalData.filterTagList = calFilterTagList(this.tagCanUseList, globalData.tagList, globalData.styleList) || []
     }
   }
 </script>
