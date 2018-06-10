@@ -120,6 +120,13 @@
       async test () {
         console.log('测试接口')
         try {
+          const demo = await styleTransfer.allSegmentTimeout(this.imgUrls[0], 64, 10 * 1000)
+          console.log('三秒后执行', demo)
+        } catch (err) {
+          console.log('reject', err)
+        } 
+
+        try {
           // const {tempFilePaths: [path]} = await wepy.chooseImage({count: 1,sizeType: ['compressed']})
           // const data = await base.upload(path)
           // console.log('测试-upload', data, typeof data)
@@ -128,8 +135,7 @@
           // console.log('测试-segment', data, typeof data)
 
           // const data = await styleTransfer.styleList()
-          // console.log('测试-styleList', data, typeof data)
-
+          // console.log('测试-styleList', data, typeof data)   
         } catch (err) {
           console.log('err', err)
         }

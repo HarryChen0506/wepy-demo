@@ -334,7 +334,7 @@
         this.selectButtonType = 'choose'
         this.calRandomButtonStyle()        
         // 渲染
-        await this.chooseRender()        
+        await this.chooseRender(item)        
         // console.log('page receive event: change style', item)
         this.currentStyle = item;
         // 广播事件
@@ -362,56 +362,6 @@
     initTagList () {
       const {globalData} = this.$parent
       this.filterTagList = globalData.filterTagList
-    }
-
-    // 计算变换后的taglist
-    oldCalFilterTagList (tagCanUseList = [], originTagList = [], originStyleList = []) {
-      let tagList = []
-      tagCanUseList.forEach(v => {
-        const tag = originTagList.find(k => {
-          // console.log(k, v)
-          return k.id == v
-        })
-        // console.log('tag', tag)
-        if (tag && tag.detailIdList) {
-          tag.styleList = []
-          // console.log('tag.detailIdList', tag.detailIdList)
-          tag.detailIdList.forEach(l => {
-            const style = originStyleList.find(j => {
-              return j.detailId == l
-            })
-            // console.log('style', style)
-            if (style) {
-              const {backgroundUrl, brushAnimation, detailId, name, stylePicUrl} = style
-              const newStyle = {backgroundUrl, brushAnimation, detailId, name, stylePicUrl}
-              tag.styleList.push(newStyle)
-            }              
-          })
-        }          
-        if (tag){
-          tagList.push(tag)
-        }
-      })
-      return tagList
-    }
-
-    // 新的计算方法
-    calFilterTagList (tagCanUseList = [], originTagList = [], originStyleList = []) { 
-      const newTagList = originTagList.filter(v => {
-        return tagCanUseList.indexOf(v.id) > -1
-      })
-      newTagList.forEach(v => {
-        v.styleList = []
-        v.detailIdList.forEach(id => {
-          let style = originStyleList.filter(k => {
-            return k.detailId === id
-          })[0]
-          if (style) {
-            v.styleList.push(style)
-          }    
-        })  
-      })
-      return newTagList
     }
 
     // 计算随机按钮样式
@@ -455,9 +405,9 @@
     }
 
     // 指定处理
-    async chooseRender () {
+    async chooseRender (currentStyle) {
       // style 指定的风格
-      this.renderResult = await this.segment(this.cropedImagePath, this.currentStyle.detailId)
+      this.renderResult = await this.segment(this.cropedImagePath, currentStyle.detailId)
       this.$apply()
     }
 
@@ -489,7 +439,7 @@
       try {
         this.renderStatus = 'loading'
         this.imageLoaded = false
-        allSegmentData = await styleTransfer.allSegment(remoteImageUrl, styleId)
+        allSegmentData = await styleTransfer.allSegmentTimeout(remoteImageUrl, styleId, 10 * 1000) // 10秒的判断超时
       } catch (err) {
         console.log('风格迁移失败', err)
         this.renderStatus = 'fail'

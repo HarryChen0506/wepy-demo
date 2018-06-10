@@ -88,6 +88,19 @@ export const base = {
       dataType: 'json'
     }
     return http.commonRequest(reqData)
+  },
+  timeout: function (interval, toReject) {
+    // isReject为true时reject
+    // 默认resolve
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (toReject) {
+          reject('timeout fail !')
+        } else {
+          resolve('timeout success !')
+        }
+      }, interval)
+    })
   }
 }
 
@@ -138,6 +151,11 @@ export const styleTransfer = {
     let colorSegment = this.segment(remoteImgUrl, styleId)
     let rawSegment = this.segment(remoteImgUrl, styleId, true)
     return Promise.all([colorSegment, rawSegment])
+  },
+  allSegmentTimeout: function (remoteImgUrl, styleId, interval) {
+    let allSegment = this.allSegment(remoteImgUrl, styleId)
+    let timeout = base.timeout(interval, true)
+    return Promise.race([allSegment, timeout])
   },
   tagList: function () {
     // 获取风格标签列表
