@@ -14,16 +14,19 @@
     }
     .tag {
       position: absolute;
-      left: 20rpx;
-      bottom: 30rpx;
-      padding: 0 20rpx;
+      left: 0rpx;
+      bottom: 10rpx;
+      padding: 0 10rpx;
       height: 36rpx;
       line-height: 36rpx;
       font-size: 20rpx;
       color: #fff;
       background: #000;
+      display: flex;
+      align-items:center;
+      justify-content:space-around;   
       .icon {
-        margin-left: 10rpx;
+        margin-left: 5rpx;
         display: inline-block;
         width: 18rpx;
         height: 18rpx;
@@ -51,11 +54,11 @@
 import wepy from 'wepy'
 export default class StyleButton extends wepy.component {
   props = {
-    item: {}   
+    item: {}
   }
 
   data = {
-     currentStyle: {}
+    currentStyle: {}
   }
 
   events = {

@@ -163,6 +163,11 @@
       .share-wrap {
         display: flex;
       }
+      .tip-wrap {
+        font-size:16px;
+        color:#999;
+        text-align:center;
+      }
     }
     .footer {
       flex: 1;
@@ -194,7 +199,7 @@
       <view class="image-wrap">
         <image class="origin-image" src="{{cropedImagePath}}"/>        
         <image class="render-image {{imageType === 'color-unsegment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.color.renderUrl && (renderResult.color.renderUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('color-unsegment')"/>
-        <image class="render-image {{imageType === 'color-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.color.renderUrl && (renderResult.color.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('color-segment')"/>
+        <image class="render-image {{imageType === 'color-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.color.targetUrl && (renderResult.color.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('color-segment')"/>
         <image class="render-image {{imageType === 'raw-unsegment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.renderUrl && (renderResult.raw.renderUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-unsegment')"/>
         <image class="render-image {{imageType === 'raw-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.targetUrl && (renderResult.raw.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-segment')"/>        
       </view>
@@ -247,11 +252,12 @@
           </repeat>  
         </scroll-view>
       </view>
-      <view class="share-wrap">        
-        <view class="button black">保存至相册</view>
-        <view class="button red" style="margin-left: 20rpx">分享</view>
-        <!-- <button @tap="onChooseStyle">自己选风格</button> -->
-        <!-- <text>当前风格：{{currentStyle.title}}</text> -->
+      <view class="share-wrap" wx-if="{{renderStatus !== 'fail'}}">        
+        <button class="button black" @tap="save">保存至相册</button>
+        <button class="button red" style="margin-left: 20rpx" open-type="share">分享</button>
+      </view>
+      <view class="tip-wrap" wx-if="{{renderStatus === 'fail'}}">
+        <text>渲染出错啦，切换风格重试一下吧~</text>
       </view>
     </view>
     <view class="footer" wx:if="{{showResult}}">分享结果</view>
@@ -269,7 +275,31 @@
     selectButtonThumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
     selectStyleTitle: '田野的风',
     cropedImagePath: 'http://tmp/wx21630a5d4651096a.o6zAJsztn2DIgXEGteELseHpiOtU.1pt6jtQ6MgIb779bd49c491911729629c3064e1cb5f0.png',
-
+  }
+  // 计算风格标签数组
+  const calFilterTagList = function (tagCanUseList = [], originTagList = [], originStyleList = []) { 
+    originTagList = tool.deepClone(originTagList)
+    originStyleList = tool.deepClone(originStyleList)
+    const newTagList = originTagList.filter(v => {
+      return tagCanUseList.indexOf(v.id) > -1
+    })
+    newTagList.forEach(v => {
+      // v.tagCode = ''
+      // v.tagName = ''
+      // v.tagOrder = ''
+      v.styleList = []
+      v.detailIdList.forEach(id => {
+        let style = originStyleList.filter(k => {
+          return k.detailId === id
+        })[0]
+        if (style) {
+          const {backgroundUrl, brushAnimation, detailId, name, stylePicUrl} = style
+          const newStyle = {backgroundUrl, brushAnimation, detailId, name, stylePicUrl}
+          v.styleList.push(newStyle)
+        }    
+      })  
+    })
+    return newTagList
   }
   export default class Index extends wepy.page {
     config = {
@@ -302,7 +332,7 @@
       showRandomButtonText: true,   // 默认显示标题
       renderStatus: 'init', // 渲染结果 'success' 'fail' 'init' 'loading'
 
-      // tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
+      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
       filterTagList: [],
       currentStyle: {},
       tagShowIndex: {}, // 控制tag标签隐藏
@@ -347,21 +377,61 @@
           this.renderStatus = 'success'
           console.log('关闭loading')
         }        
+      },
+      async save () {
+        console.log('保存')
+        wx.showLoading({
+          title: "正在保存",
+          mask: true,
+        })
+        const {imageType, renderResult} = this
+			  const saveImageUrl = this.getCurrentImage(imageType, renderResult)
+        wx.downloadFile({
+          url: saveImageUrl.replace('http', 'https'),
+          success: function(res) {
+            // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+            if (res.statusCode === 200) {
+                console.log('res', res)
+                const localImageUrl = res.tempFilePath
+                saveImage(localImageUrl)
+            }
+          }
+        })
+        async function saveImage (image) {
+          try {
+            await wepy.saveImageToPhotosAlbum({filePath: image})
+            // this.showHover = true
+            // this.noticeText = '保存成功'
+            // this.$apply()
+            console.log('保存成功')
+          } finally {
+            wx.hideLoading()
+          }
+        }        
       }
+
     }
 
     events = {}
 
-    async onLoad() {      
+    async onLoad() {
+      const {globalData} = this.$parent     
       // 加载选择相关
-      this.initTagList()     
-      // 初次渲染
-      await this.randomRender()
-    }
-
-    initTagList () {
-      const {globalData} = this.$parent
+      console.log('onload-globalData', globalData)
+      if (!globalData.filterTagList) {
+        await this.getTagList()
+      }
       this.filterTagList = globalData.filterTagList
+           
+      // 从上级页面获取随机渲染的结果
+      if (globalData.renderResult) {
+        this.currentStyle = globalData.currentStyle
+        this.renderResult = globalData.renderResult        
+      } else {
+        const renderResult = await this.initRender()
+        this.renderResult = renderResult
+      }
+      this.$apply()
     }
 
     // 计算随机按钮样式
@@ -383,12 +453,12 @@
       console.log('cropedImagePath', this.cropedImagePath)
       const renderResult = await this.segment(this.cropedImagePath, 124)
       console.log('renderResult', renderResult)
-      this.$apply()
+      return renderResult
     }
 
     // 随机处理
     async randomRender () {
-      console.log('randomRender')      
+      // console.log('randomRender')    
       const {globalData} = this.$parent
       // 获取图片
       this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
@@ -406,8 +476,10 @@
 
     // 指定处理
     async chooseRender (currentStyle) {
+      const {globalData} = this.$parent
       // style 指定的风格
-      this.renderResult = await this.segment(this.cropedImagePath, currentStyle.detailId)
+      const cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
+      this.renderResult = await this.segment(cropedImagePath, currentStyle.detailId)
       this.$apply()
     }
 
@@ -416,7 +488,7 @@
       // 判断是否在缓存里
       const cacheKey = `${localImgPath}_styleId_${styleId}`
       if (cacheStyle.get(cacheKey)) {
-        console.log('get-cache', cacheStyle)
+        console.log('get-cache', cacheKey, cacheStyle.get(cacheKey))
         return cacheStyle.get(cacheKey)
       }
       // 先上传到静态服务器
@@ -427,6 +499,7 @@
         remoteImageUrl = cacheStyle.get(cacheRemoteUrlKey)
       } else {
         try {
+          // console.log('上传图片地址',cacheRemoteUrlKey, cacheStyle)
           const {url} = await base.upload(localImgPath)
           remoteImageUrl = cacheStyle.set(cacheRemoteUrlKey, url)
         } catch (err) {
@@ -445,13 +518,11 @@
         this.renderStatus = 'fail'
         return 
       }
-      // this.renderStatus = 'success'
-      // console.log('allSegmentData', allSegmentData) 
-
+      
       function hasSegmentButton (data) {
         return data.result.renderUrl !== data.result.targetUrl
       }
-      // console.log('set-cache', cacheStyle)
+      console.log('set-cache')
       return cacheStyle.set(cacheKey, {
         color: allSegmentData[0].result,
         raw: allSegmentData[1].result,
@@ -459,6 +530,69 @@
       })
 
     }
+
+    // 获取标签信息
+    async getTagList () {
+      const {globalData} = this.$parent
+      if (!globalData.styleList) {
+        try {
+          const styleList = await styleTransfer.styleList()
+          globalData.styleList = styleList.result
+        } catch (err) {
+          console.log('catch-error: get styleList fail', err)
+        }        
+      }
+      if (!globalData.tagList) {
+        try {
+          const tagList = await styleTransfer.tagList()
+          globalData.tagList = tagList.result && tagList.result.featureTagVoList
+        } catch (err) {
+          console.log('catch-error: get tagList fail', err)
+        }       
+      }  
+      globalData.filterTagList = calFilterTagList(this.tagCanUseList, globalData.tagList, globalData.styleList) || []
+    }
+
+    // 计算当前图片风格图片
+    getCurrentImage (imageType, renderResult) {
+      let image = ''
+      switch (imageType) {
+        case 'color-unsegment':
+          image = renderResult.color.renderUrl || ''
+          break
+        case 'color-segment':
+          image = renderResult.color.targetUrl || ''
+          break
+        case 'raw-unsegment':
+          image = renderResult.raw.renderUrl || ''
+          break
+        case 'raw-segment':
+          image = renderResult.raw.targetUrl || ''
+          break
+      }
+      return image
+    }
+
+    // 转发分享
+    onShareAppMessage () {
+      const {imageType, renderResult} = this
+			const shareImage = this.getCurrentImage(imageType, renderResult)		
+			const data = {
+				shareImage: shareImage,
+				shareStyleId: this.currentStyle.detailId,
+      }
+      const path = tool.formatQueryUrl('/pages/versa', data)
+			return {
+				title: '照片再丑不要怕，一秒让你变名画！',
+				path: path,
+				imageUrl: shareImage + '?x-oss-process=image/resize,h_400',
+				success: () => {
+					// this.showHover = true
+          // this.noticeText = '分享成功'
+          console.log('分享成功')
+				},
+			}
+		}
 
   }
 </script>

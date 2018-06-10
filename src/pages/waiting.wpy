@@ -142,7 +142,9 @@
     data = {     
       iamgePath: '',
       showLoading: false,
-      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1]
+      tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
+      cropedImagePath: '',
+      renderStatus: 'init'
     }
 
     computed = {
@@ -167,6 +169,7 @@
       async show () {
         this.onShowLoading()
         await this.getTagList()
+        await this.randomRender()
         wx.navigateTo({url: `/pages/style`})
       },
       hide () {
@@ -198,20 +201,8 @@
       this.showLoading = false
       this.$invoke('loading', 'onHide');
     }
-    async segment (localImgPath, styleId) {
-      // 判断是否在缓存里
-      const cacheKey = `${localImgPath}_styleId_${styleId}`
-      if (cacheStyle.get(cacheKey)) {
-        console.log('get-cache', cacheStyle)
-        return cacheStyle.get(cacheKey)
-      }
-      // 先上传到静态服务器
-      const {url} = await base.upload(localImgPath)
-      // 再进行风格迁移
-      const data = await styleTransfer.segment(url, styleId)      
-      console.log('set-cache', cacheStyle)
-      return cacheStyle.set(cacheKey, data)
-    }
+
+   
     async getTagList () {
       const {globalData} = this.$parent
       if (!globalData.styleList) {
@@ -229,9 +220,69 @@
         } catch (err) {
           console.log('catch-error: get tagList fail', err)
         }       
-      }   
-      // this.filterTagList = this.calFilterTagList([12, 29, 27, 28, 33, 32, 31,30, 34, 1], globalData.tagList, globalData.styleList) || []
+      }  
       globalData.filterTagList = calFilterTagList(this.tagCanUseList, globalData.tagList, globalData.styleList) || []
     }
+
+    // 随机处理
+    async randomRender () {
+      // console.log('randomRender')    
+      const {globalData} = this.$parent
+      const {filterTagList = [], cropedImagePath = ''} = globalData
+      // 获取图片
+      const randomTagIndex = tool.createRandom(0, filterTagList.length -1)
+      const randomStyleIndex = tool.createRandom(0, filterTagList[randomTagIndex].styleList.length - 1)
+      const currentStyle = filterTagList[randomTagIndex].styleList[randomStyleIndex]
+      console.log('随机选择后的当前风格', currentStyle)
+      globalData.renderResult = await this.segment(cropedImagePath, currentStyle.detailId)
+      globalData.currentStyle = currentStyle
+      console.log('globalData', globalData)
+    }
+
+     // 渲染服务
+    async segment (localImgPath, styleId) {      
+      // 判断是否在缓存里
+      const cacheKey = `${localImgPath}_styleId_${styleId}`
+      if (cacheStyle.get(cacheKey)) {
+        console.log('get-cache', cacheKey, cacheStyle.get(cacheKey))
+        return cacheStyle.get(cacheKey)
+      }
+      // 先上传到静态服务器
+      let remoteImageUrl = ''
+      // 判断是否有远程图片地址
+      const cacheRemoteUrlKey = `${localImgPath}_remoteUrl`
+      if (cacheStyle.get(cacheRemoteUrlKey)) {
+        remoteImageUrl = cacheStyle.get(cacheRemoteUrlKey)
+      } else {
+        try {
+          const {url} = await base.upload(localImgPath)
+          remoteImageUrl = cacheStyle.set(cacheRemoteUrlKey, url)
+        } catch (err) {
+          console.log('上传图片失败', err)
+        }
+      } 
+
+      // 最后进行风格迁移
+      let allSegmentData = []
+      try {
+        this.renderStatus = 'loading'
+        allSegmentData = await styleTransfer.allSegment(remoteImageUrl, styleId)
+      } catch (err) {
+        console.log('风格迁移失败', err)
+        this.renderStatus = 'fail'
+        return 
+      }
+      
+      function hasSegmentButton (data) {
+        return data.result.renderUrl !== data.result.targetUrl
+      }
+      console.log('set-cache')
+      return cacheStyle.set(cacheKey, {
+        color: allSegmentData[0].result,
+        raw: allSegmentData[1].result,
+        hasSegmentButton: hasSegmentButton(allSegmentData[0])
+      })
+    }
+
   }
 </script>
