@@ -175,6 +175,26 @@
       flex-direction: column;
       align-items:center;
       justify-content:center;
+      .result-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items:center;
+        justify-content:center;
+        margin-bottom:36rpx;
+        .icon {
+          width: 80rpx;
+          height: 80rpx;
+        }
+        .text {
+          font-size:32rpx;
+          line-height:90rpx;
+        }
+      }
+      .back-wrap {
+        display: flex;
+        align-items:center;
+        justify-content:center;
+      }
     }
     .button {
       width:320rpx;
@@ -260,7 +280,16 @@
         <text>渲染出错啦，切换风格重试一下吧~</text>
       </view>
     </view>
-    <view class="footer" wx:if="{{showResult}}">分享结果</view>
+    <view class="footer" wx:if="{{showResult}}">
+      <view class="result-wrap">
+        <image class="icon" src="../assets/images/smile.svg"></image>
+        <text class="text">保存成功</text>
+      </view>
+      <view class="back-wrap">
+        <button class="button black" @tap="back">返回</button>
+        <button class="button red" style="margin-left: 20rpx" @tap="reset">换张试试</button>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -337,7 +366,8 @@
       currentStyle: {},
       tagShowIndex: {}, // 控制tag标签隐藏
 
-      showResult: false
+      showResult: false,
+      resultText: ''
     }
 
     methods = {
@@ -380,6 +410,7 @@
       },
       async save () {
         console.log('保存')
+        const _this = this
         wx.showLoading({
           title: "正在保存",
           mask: true,
@@ -400,14 +431,28 @@
         async function saveImage (image) {
           try {
             await wepy.saveImageToPhotosAlbum({filePath: image})
-            // this.showHover = true
-            // this.noticeText = '保存成功'
-            // this.$apply()
-            console.log('保存成功')
-          } finally {
+            _this.showResult = true
+            _this.resultText = '保存成功'
             wx.hideLoading()
-          }
+            _this.$apply()
+            console.log('保存成功')
+          } catch (err) {
+            console.log('保存失败', err)
+            wx.hideLoading()
+            wx.showToast({
+              title: '保存失败',
+              icon: 'success',
+              duration: 3000
+            })            
+          } 
         }        
+      },
+      back () {
+        this.showResult = false
+        this.resultText = ''
+      },
+      reset () {
+        console.log('换张试试')
       }
 
     }
@@ -589,6 +634,9 @@
 				success: () => {
 					// this.showHover = true
           // this.noticeText = '分享成功'
+          this.showResult = true
+          this.resultText = '分享成功'
+          this.$apply()
           console.log('分享成功')
 				},
 			}
