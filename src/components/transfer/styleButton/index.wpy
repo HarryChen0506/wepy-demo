@@ -3,7 +3,7 @@
     display: inline-block;
     width: 160rpx;
     height: 160rpx;
-    background: yellow;
+    box-shadow:4rpx 4rpx 8rpx rgba(0,0,0,0.5);
     position: relative;
     .bg {
       position: absolute;

@@ -98,8 +98,8 @@
     </view>  
     <view class="footer">
       <view class="button red rechoose" @tap="back">重选照片</view>
-      <view class="button red rechoose" @tap="show">show</view>
-      <view class="button red rechoose" @tap="hide">hide</view>
+      <!-- <view class="button red rechoose" @tap="show">show</view>
+      <view class="button red rechoose" @tap="hide">hide</view> -->
     </view>
   </view>
 </template>
@@ -149,6 +149,7 @@
       iamgePath: '',
       loading: false,
       tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
+      // tagCanUseList: [12, 1],
       cropedImagePath: '',
       renderStatus: 'init'
     }
@@ -161,14 +162,11 @@
 
     methods = {
       back () {
-        console.log('back')
-      },
-      async show () {
+        // console.log('back')
+        wx.navigateBack({url: `/pages/versa`})      
+      },      
+      show () {
         this.onShowLoading()
-        await this.getTagList()
-        await this.randomRender()
-        this.onHideLoading()
-        wx.navigateTo({url: `/pages/style`})
       },
       hide () {
         this.onHideLoading()
@@ -190,7 +188,18 @@
       // this.iamgePath =  demo[0]
       console.log('globalData', globalData)
       // this.segment(this.iamgePath, 64)
+      this.wait()
     }
+
+    async wait () {
+      this.onShowLoading()
+      await this.getTagList()
+      await this.randomRender()
+      this.onHideLoading()
+      // wx.navigateTo({url: `/pages/style`})
+      wx.redirectTo({url: '/pages/style'})
+    }
+
     onShowLoading () {
       this.loading = true
       this.$invoke('loading', 'onShow');

@@ -25,8 +25,8 @@ export default class extends wepy.app {
   config = {
     pages: [
       'pages/versa',
-      'pages/waiting',
       'pages/style',
+      'pages/waiting',
       'pages/crop',
       'pages/base',
       // 'pages/changebg',

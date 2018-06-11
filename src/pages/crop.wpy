@@ -16,7 +16,7 @@
     }
     .main {
       box-sizing:border-box;
-      border:4rpx solid #000;
+      border: 4rpx solid #fff;
       position: relative;
       .image-wrap {
         position: absolute;
@@ -88,7 +88,7 @@
     <view class="footer">
       <view class="word">调整画面位置</view>
       <view class="button red generate" @tap="generateImage">生成</view>
-      <view class="button black">重选</view>
+      <view class="button black" @tap="back">重选</view>
     </view>
     <view class="canvas-wrap">
       <canvas style="width: {{canvas.width}}px; height: {{canvas.height}}px;border: 1px solid #000;" canvas-id="mycanvas" />
@@ -177,7 +177,7 @@
           // console.log('gesture-two', this.gesture);
         }
       },
-      ontouchmove: this.throttle( this.touchmove, 1000/60).bind(this),
+      ontouchmove: this.throttle( this.touchmove, 1000/100).bind(this),
       ontouchend (e) {
         // console.log('ontouchend', e)        
         if (e.touches.length === 0) {
@@ -216,8 +216,14 @@
         console.log('end', this.img)
       },
       generateImage () {
-        console.log('123')
+        wx.showLoading({
+          title: "正在生成图片",
+          mask: true,
+        })
         this.createCanvas()
+      },
+      back () {
+        wx.navigateBack({url: `/pages/versa`})
       }
     }
 
@@ -362,7 +368,9 @@
             globalData.cropedImagePath = tempFilePath
             console.log('globalData', _this.$parent.globalData)
             // 跳转裁剪后页面
-            wx.navigateTo({url: `/pages/waiting`})
+            wx.hideLoading()
+            // wx.navigateTo({url: `/pages/waiting`})
+            wx.redirectTo({url: '/pages/waiting'})
           },
           fail: function (res) {
             console.log(res);

@@ -62,7 +62,7 @@
     <view class="bottom">
       <image class="logo" src="{{logoUrl}}"/> 
       <view class="button" @tap="chooseImg">选取照片</view>
-      <button @tap="test">测试接口</button>  
+      <!-- <button @tap="test">测试接口</button>   -->
     </view>
   </view>
 </template>
@@ -148,10 +148,14 @@
       
     }
 
-    onLoad () {
+    onLoad (options) {
       // 获取app实    
-      // console.log('this-app', this.$wxapp)
-
+      // console.log('this-app', options, this.$wxpage)
+      let {shareImage, shareStyleId} = options
+      if (shareImage) {
+        shareImage = decodeURIComponent(shareImage) + '?x-oss-process=image/resize,h_750'
+        this.imgUrls.unshift(shareImage)
+      }
       // 提前获取标签和风格信息
       this.initData()
     }
