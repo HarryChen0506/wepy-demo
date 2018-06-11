@@ -110,6 +110,7 @@
           choosedImagePath = path
         } catch (error) {
           console.log('catch-error: chooseImage-fail', error)
+          return 
         }                
         const {globalData} = this.$parent
         globalData.choosedImagePath = choosedImagePath

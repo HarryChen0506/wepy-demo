@@ -1,0 +1,114 @@
+<style lang="less" scoped>
+	.brush {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    .bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;      
+    }
+    .block {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;  
+      background: #fff;
+      opacity: 0;
+    }
+    .show {
+      opacity: 1;
+    }
+  }
+</style>
+<template>
+  
+  <view class="brush">
+    <image class="bg" model="aspectFill" src="{{currentStyle.backgroundUrl}}"></image>
+    <view id="brush-cover" class="block {{show?'show':''}}" animation="{{animationData}}" ></view>
+  </view>
+  
+</template>
+<script>
+import wepy from 'wepy'
+export default class Brush extends wepy.component {
+  props = {
+    currentStyle: {}
+  }
+
+  components = {
+  }
+
+  data = {
+    animationData: {},
+    show: false,
+    width: 0,
+    height: 0
+  }
+  events = {
+  }
+
+  onLoad () {
+    this.getClientInfo()
+  }
+
+  methods = {
+    animate (currentStyle) {
+      // leftIn bottomIn rightIn topIn
+      const type = currentStyle.brushAnimation || 'leftIn'
+      const translate = {
+        x: 0,
+        y: 0
+      }
+      switch (type) {
+        case 'leftIn':
+          translate.x = this.width
+          break
+        case 'rightIn':
+          translate.x = -this.width
+          break
+        case 'topIn':
+          translate.y = this.height
+          break
+        case 'bottomIn':
+          translate.y = -this.height
+          break
+      }
+      this.move(translate)
+    }
+  }
+
+  // 获取元素尺寸信息
+  getClientInfo () {
+    const _this = this
+    wx.createSelectorQuery().select('#brush-cover').boundingClientRect(function (rect) {
+      const {width, height} = rect
+      _this.width = width
+      _this.height = height
+      _this.$apply()
+    }).exec()
+  }
+
+  // 动画
+  move (option) {
+    let animation = wx.createAnimation({
+      duration: 1000,
+      timingFunction: 'ease'
+    })
+    animation.translate(option.x, option.y).step()
+    this.show = true
+    this.animationData = animation.export()
+    setTimeout(() => {
+      this.show = false
+      animation.translate(0, 0).step()
+      this.animationData = animation.export()
+      this.$apply()
+    }, 500)
+  }
+}
+</script>

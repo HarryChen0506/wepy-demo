@@ -167,15 +167,18 @@ export default class loading extends wepy.component {
   events = {}
 
   start () {
-    // this.intervalId = setInterval(() => {
-    //   let frame = Math.floor((+new Date()) % (49 * 150) / 150)
-    //   // frame = frame.toString().padStart(5, '0')
-    //   frame = tool.padStart(frame.toString(), 5, '0')
-    //   if (frame !== this.frame) {
-    //     this.frame = frame
-    //     this.$apply()
-    //   }
-    // }, 25)
+    if (this.intervalId){
+      clearInterval(this.intervalId)
+    }
+    this.intervalId = setInterval(() => {
+      let frame = Math.floor((+new Date()) % (49 * 150) / 150)
+      frame = tool.padStart(frame.toString(), 5, '0')
+      if (frame !== this.frame) {
+        this.frame = frame
+        this.$apply()
+      }
+      // console.log('loading', frame)
+    }, 90)
   }
   stop () {
     clearInterval(this.intervalId)

@@ -14,6 +14,7 @@
       width: 100%;
       height: 100vw;
       position: relative;
+      overflow: hidden;
       .image {
         width: 100%;
         height: 100vw;
@@ -23,7 +24,7 @@
         top: 0;
         right: 0;
         width: 100%;
-        height: 105%; 
+        height: 100%; 
         .bg {
           position: absolute;
           top:0;
@@ -44,6 +45,12 @@
           flex-direction: column;
           justify-content: center;
           align-items:center;
+        }
+        .loading-text {
+          margin-top: 20rpx;
+          font-size: 30rpx;
+          color:#333;
+          font-family:'PingFangSC-Regular';
         }
       }
     }
@@ -80,18 +87,17 @@
 <template>
   <view class="page-waiting">
     <view class="main">
-      <image class="image {{showLoading?'blur':''}}" src="{{iamgePath}}"/>
-      <view class="loading-wrap" wx-if="{{showLoading}}">
+      <image class="image {{loading?'blur':''}}" src="{{iamgePath}}"/>
+      <view class="loading-wrap" wx-if="{{loading}}">
         <view class="bg"></view>
         <view class="loading">
           <loading></loading>
+          <text class="loading-text">正在渲染中...</text>
         </view>        
       </view>
     </view>  
     <view class="footer">
-      <view class="button red rechoose" @tap="test">重选照片</view>
-      <!-- <view class="button red rechoose" @tap="test1">风格64</view>
-      <view class="button red rechoose" @tap="test2">风格124</view> -->
+      <view class="button red rechoose" @tap="back">重选照片</view>
       <view class="button red rechoose" @tap="show">show</view>
       <view class="button red rechoose" @tap="hide">hide</view>
     </view>
@@ -141,7 +147,7 @@
 
     data = {     
       iamgePath: '',
-      showLoading: false,
+      loading: false,
       tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
       cropedImagePath: '',
       renderStatus: 'init'
@@ -154,22 +160,14 @@
     }
 
     methods = {
-      test () {
-        console.log('test')
-        // cacheStyle.set('wo',{name: 123})
-        // cacheStyle.set('hah',{name: 12222})
-        console.log('cache', cacheStyle)
-      },
-      test1 () {
-        this.segment(this.iamgePath, 64)
-      },
-      test2 () {
-        this.segment(this.iamgePath, 124)
+      back () {
+        console.log('back')
       },
       async show () {
         this.onShowLoading()
         await this.getTagList()
         await this.randomRender()
+        this.onHideLoading()
         wx.navigateTo({url: `/pages/style`})
       },
       hide () {
@@ -194,11 +192,11 @@
       // this.segment(this.iamgePath, 64)
     }
     onShowLoading () {
-      this.showLoading = true
+      this.loading = true
       this.$invoke('loading', 'onShow');
     }
     onHideLoading () {
-      this.showLoading = false
+      this.loading = false
       this.$invoke('loading', 'onHide');
     }
 

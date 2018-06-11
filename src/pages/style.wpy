@@ -12,7 +12,6 @@
       width: 100%;
       height: 100vw;
       position: relative;
-      margin-bottom: 10px;
       .image-wrap {
         width: 100%;
         height: 100%;
@@ -54,7 +53,7 @@
           z-index: 1;
           width: 100%;
           height: 100%;
-          background: rgba(220, 220, 220, 0.8);
+          background: rgba(220, 220, 220, 0.9);
         }
         .loading {
           position: absolute;
@@ -68,6 +67,12 @@
           justify-content: center;
           align-items:center;
         }
+        .loading-text {
+          margin-top: 20rpx;
+          font-size: 30rpx;
+          color:#333;
+          font-family:'PingFangSC-Regular';
+        }
       }
     }
     .main {
@@ -76,7 +81,16 @@
       flex-direction: column;
       align-items:center;
       justify-content:space-around;   
-      // justify-content:center;   
+      // justify-content:center;  
+      position: relative;
+      .style-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        width: 100%;
+        height: 100%;
+      } 
       .type-wrap {
         display: flex;
         align-items:center;
@@ -93,6 +107,7 @@
           display: flex;
           align-items:center;
           justify-content:center;
+          background: #fff;
           &.bg {
             background-image: url('data:image/png;base64,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');
             background-size: 240rpx 84rpx;
@@ -223,16 +238,22 @@
         <image class="render-image {{imageType === 'raw-unsegment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.renderUrl && (renderResult.raw.renderUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-unsegment')"/>
         <image class="render-image {{imageType === 'raw-segment'&&imageLoaded ? 'show' : ''}}" src="{{renderResult.raw.targetUrl && (renderResult.raw.targetUrl + '?x-oss-process=image/resize,h_800')}}" bindload="imageLoad('raw-segment')"/>        
       </view>
-      <view class="loading-wrap" wx-if="{{renderStatus === 'loading'}}">
+      <view class="loading-wrap" wx-if="{{loading}}">
         <view class="bg"></view>
         <view class="loading">
           <loading></loading>
+          <text class="loading-text">正在渲染中...</text>
         </view> 
       </view> 
     </view>
     <view class="main" wx:if="{{!showResult}}">
+      <view class="style-bg">
+        <brush 
+          :currentStyle.sync="currentStyle"
+        ></brush>
+      </view>
       <view class="type-wrap">
-        <view class="type-button {{segmentType ? '' : 'bg'}}" @tap="segmentTypeToggle">
+        <view wx-if="{{renderResult.hasSegmentButton}}" class="type-button {{segmentType ? '' : 'bg'}}" @tap="segmentTypeToggle">
           <view class="icon-wrap">            
             <image mode="scaleToFill" src="../assets/images/segment-icon.png" style="width:48rpx; height:48rpx"></image>
           </view>
@@ -283,7 +304,7 @@
     <view class="footer" wx:if="{{showResult}}">
       <view class="result-wrap">
         <image class="icon" src="../assets/images/smile.svg"></image>
-        <text class="text">保存成功</text>
+        <text class="text">{{resultText}}</text>
       </view>
       <view class="back-wrap">
         <button class="button black" @tap="back">返回</button>
@@ -300,6 +321,7 @@
   import {cacheStyle} from '../services/cache.js'
   import loading from '../components/transfer/loading/index'
   import styleTag from '../components/transfer/styleTag/index'
+  import brush from '../components/transfer/brush/index'
   const mock = {
     selectButtonThumbnailUrl: 'http://static01.versa-ai.com/upload/prod/image/style/b4157f95-3678-4b43-a632-4de5b15f7d46.jpeg?x-oss-process=image/resize,h_200',
     selectStyleTitle: '田野的风',
@@ -336,7 +358,8 @@
     }
     components = { 
       styleTag: styleTag,
-      loading: loading
+      loading: loading,
+      brush: brush
     }
 
     mixins = []
@@ -360,6 +383,7 @@
       showRandomButtonImage: false, // 默认不显示随机按钮风格图
       showRandomButtonText: true,   // 默认显示标题
       renderStatus: 'init', // 渲染结果 'success' 'fail' 'init' 'loading'
+      loading: true,
 
       tagCanUseList: [12, 29, 27, 28, 33, 32, 31,30, 34, 1],
       filterTagList: [],
@@ -394,18 +418,15 @@
         this.selectButtonType = 'choose'
         this.calRandomButtonStyle()        
         // 渲染
-        await this.chooseRender(item)        
-        // console.log('page receive event: change style', item)
-        this.currentStyle = item;
-        // 广播事件
-        this.$broadcast('setCurrentStyle', this.currentStyle)
+        await this.chooseRender(item)
       },
       imageLoad (currentImageType) {
         if (this.imageType === currentImageType) {
           console.log('图片下载成功', currentImageType, this.renderStatus)
           this.imageLoaded = true
           this.renderStatus = 'success'
-          console.log('关闭loading')
+          // console.log('关闭loading')
+          this.hideLoading()
         }        
       },
       async save () {
@@ -420,7 +441,6 @@
         wx.downloadFile({
           url: saveImageUrl.replace('http', 'https') + '?x-oss-process=image/resize,h_750',
           success: function(res) {
-            // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
             if (res.statusCode === 200) {
                 console.log('res', res)
                 const localImageUrl = res.tempFilePath
@@ -476,6 +496,7 @@
         const renderResult = await this.initRender()
         this.renderResult = renderResult
       }
+      this.hideLoading()
       this.$apply()
     }
 
@@ -503,7 +524,7 @@
 
     // 随机处理
     async randomRender () {
-      // console.log('randomRender')    
+      // console.log('randomRender')
       const {globalData} = this.$parent
       // 获取图片
       this.cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
@@ -513,19 +534,51 @@
       const randomStyleIndex = tool.createRandom(0, filterTagList[randomTagIndex].styleList.length - 1)
       const currentStyle = filterTagList[randomTagIndex].styleList[randomStyleIndex]
       console.log('随机选择后的当前风格', currentStyle)
+      this.changeCurrentStyle(currentStyle)
       this.renderResult = await this.segment(this.cropedImagePath, currentStyle.detailId)
-      this.currentStyle = currentStyle
-      console.log('renderResult', this.renderResult)
+      console.log('renderResult', this.renderResult)     
       this.$apply()
     }
 
     // 指定处理
     async chooseRender (currentStyle) {
+      this.changeCurrentStyle(currentStyle)
+
       const {globalData} = this.$parent
       // style 指定的风格
       const cropedImagePath = globalData.cropedImagePath || mock.cropedImagePath
       this.renderResult = await this.segment(cropedImagePath, currentStyle.detailId)
       this.$apply()
+    }
+
+    // 更换样式风格
+    changeCurrentStyle (currentStyle) {
+      this.currentStyle = currentStyle     
+      // 背景动画
+      this.$invoke('brush', 'animate', this.currentStyle);
+      // 广播事件
+      this.$broadcast('setCurrentStyle', this.currentStyle)
+    }
+
+    // loading
+    showLoading () {
+      // renderStatus !== 'loading'
+      this.loading = true
+      this.$invoke('loading', 'onShow');
+    }
+
+    hideLoading () {
+      this.loading = false
+      this.$invoke('loading', 'onHide');
+    }
+
+    // 判断是否loading
+    toLoading () {
+      if (this.renderStatus !== 'loading' ) {
+        this.showLoading()
+      } else {
+        this.hideLoading()
+      }
     }
 
     // 渲染服务
@@ -557,10 +610,14 @@
       try {
         this.renderStatus = 'loading'
         this.imageLoaded = false
+        this.showLoading()
         allSegmentData = await styleTransfer.allSegmentTimeout(remoteImageUrl, styleId, 10 * 1000) // 10秒的判断超时
+        this.renderStatus = 'success'
+        // this.hideLoading() //在图片加载完再关闭
       } catch (err) {
         console.log('风格迁移失败', err)
         this.renderStatus = 'fail'
+        this.hideLoading()
         return 
       }
       
@@ -632,8 +689,6 @@
 				path: path,
 				imageUrl: shareImage + '?x-oss-process=image/resize,h_400',
 				success: () => {
-					// this.showHover = true
-          // this.noticeText = '分享成功'
           this.showResult = true
           this.resultText = '分享成功'
           this.$apply()
