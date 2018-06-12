@@ -24,8 +24,9 @@
         top: 0;
         z-index: -1;
         // transition: all 0.1s linear;
-        transition-property: left, top;
-        transition-duration: 0.1s;
+        // transition-property: left, top;
+        transition-property: transform;
+        transition-duration: 0.2s;
       }
     }
     .footer {
@@ -81,7 +82,7 @@
       @touchmove="ontouchmove" 
       @touchend="ontouchend"
     >
-      <view class="image-wrap" style="left:{{img.x}}px;top:{{img.y}}px;transition-duration: {{transitionDuration}};">  
+      <view class="image-wrap" style="transform: translate({{img.x}}px, {{img.y}}px) scale({{img.userScale}});transition-duration: {{transitionDuration}};">  
         <image src="{{iamgePath}}" bind:load="imageLoad" style="width:{{img.width}}px;height:{{img.height}}px"/>
       </view>      
     </view>  
@@ -89,6 +90,16 @@
       <view class="word">调整画面位置</view>
       <view class="button red generate" @tap="generateImage">生成</view>
       <view class="button black" @tap="back">重选</view>
+      <!-- <view>
+        <view>x:{{img.x}}</view>
+        <view>y:{{img.y}}</view>
+        <view>width:{{img.width}}</view>
+        <view>height:{{img.height}}</view>
+        <view>autoScale:{{img.autoScale}}</view>
+        <view>userScale:{{img.userScale}}</view>
+        <view>offsetX:{{img.offsetX}}</view>
+        <view>offsetY:{{img.offsetY}}</view>
+      </view> -->
     </view>
     <view class="canvas-wrap">
       <canvas style="width: {{canvas.width}}px; height: {{canvas.height}}px;border: 1px solid #000;" canvas-id="mycanvas" />
@@ -118,6 +129,7 @@
         originWidth: 0, // 图片原始大小
         originHeight: 0,
         autoScale: 1, // 自适应的缩放比
+        userScale: 1, // 用户手势后缩放比
         autoX:0,     // 自适应后的x偏移
         autoY:0,
         scale: 1,  // 真实缩放比 （相比原始尺寸）
@@ -127,6 +139,8 @@
         height: 0, // 变换后的高
         x: 0,  // 与box的X轴偏移
         y: 0,  // 与box的y轴偏移
+        offsetX: 0, //图片左上角x实际偏移值
+        offsetY: 0, //图片左上角y实际偏移值
       },
       gesture: {
         startX: 0,
@@ -134,7 +148,7 @@
         zoom: false,
         distance: 0
       },
-      transitionDuration: 'o.1s',
+      transitionDuration: 'o.2s',
       canvas: {
         width: 375,
         height: 375,
@@ -142,11 +156,7 @@
       }
     }
 
-    computed = {
-      // now () {
-      //   return +new Date()
-      // }
-    }
+    computed = {}
 
     methods = {
       imageLoad (e) {
@@ -177,40 +187,47 @@
           // console.log('gesture-two', this.gesture);
         }
       },
-      ontouchmove: this.throttle( this.touchmove, 1000/100).bind(this),
+      // ontouchmove: this.throttle( this.touchmove, 1000/100).bind(this),
+      ontouchmove: this.touchmove,
       ontouchend (e) {
         // console.log('ontouchend', e)        
         if (e.touches.length === 0) {
           const {gesture, img, box} = this          
           const scale = img.scale
           // 如果小于自动缩放时，则还原
-          if (img.scale < img.autoScale) {
-            img.scale = img.autoScale
-            let diffScale = img.autoScale - scale
-            img.width = img.scale * img.originWidth
-            img.height = img.scale * img.originHeight
-            // img.x = img.x - diffScale * img.originWidth *0.5 
-            // img.y = img.y - diffScale * img.originHeight *0.5 
+          if (img.userScale < 1) {
+            // img.scale = img.autoScale
+            // let diffScale = img.autoScale - scale
+            // img.width = img.scale * img.originWidth
+            // img.height = img.scale * img.originHeight
+            // img.x = img.autoX
+            // img.y = img.autoY
+            img.userScale = 1
+            // 位移使图片居中
             img.x = img.autoX
             img.y = img.autoY
           }
           // 如果移动超出边界 则还原
           if(!gesture.zoom){
-            if (img.x > 0) {
-              img.x = 0
+            if (img.offsetX > 0) {
+              img.x = 0 - (1 - img.userScale) * img.width * 0.5
+              img.offsetX = 0
             } 
-            if (img.y > 0) {
-              img.y = 0
+            if (img.offsetY > 0) {
+              img.y = 0 - (1 - img.userScale) * img.height * 0.5
+              img.offsetY = 0
             } 
-            if (box.width - img.width > img.x ) {
-              img.x = box.width - img.width
+            if (box.width - img.width * img.userScale > img.offsetX ) {
+              img.x = (box.width - img.width * img.userScale) - (1 - img.userScale) * img.width * 0.5
+              img.offsetX = (box.width - img.width  * img.userScale)
             }
-            if (box.height - img.height > img.y ) {
-              img.y = box.height - img.height
-            }
-            this.transitionDuration = '0.1s'
+            if (box.height - img.height * img.userScale > img.offsetY ) {
+              img.y = (box.width - img.height * img.userScale) - (1 - img.userScale) * img.height * 0.5
+              img.offsetY = (box.width - img.height  * img.userScale)
+            }           
           }          
           //重置缩放状态
+          this.transitionDuration = '0.2s'
           gesture.zoom = false 
         }
         console.log('end', this.img)
@@ -234,13 +251,13 @@
     onLoad() {
       const {globalData} = this.$parent
       const demo = [
-        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Qmgo9peaAA1t62c018bbd5dd1595e8f1509d5a1c0e6f.jpg",
-        "http://tmp/wxc41d9fc2cdd02cf2.o6zAJsztn2DIgXEGteELseHpiOtU.Jwh7Vhois7gx5fa447cdf99ebe9bdfaff42b8dee3019.jpg"
+        "http://tmp/wx21630a5d4651096a.o6zAJsztn2DIgXEGteELseHpiOtU.NKidKasfEbMa5fa447cdf99ebe9bdfaff42b8dee3019.jpg",
       ]
       this.iamgePath = globalData.choosedImagePath || demo[0]
+      // console.log('choosedImagePath', globalData)
       // console.log('wx.getSystemInfoSync().windowWidth', wx.getSystemInfoSync())
       // 计算canvas尺寸
-      const { pixelRatio=2 } = wx.getSystemInfoSync() || {}
+      const { pixelRatio = 2 } = wx.getSystemInfoSync() || {}
       const {img, box, canvas} = this
       canvas.ratio = pixelRatio
       canvas.width = pixelRatio * box.width
@@ -262,6 +279,8 @@
       this.img.y -= (originHeight*autoScale - boxWidth) * 0.5
       this.img.autoX = this.img.x
       this.img.autoY = this.img.y
+      this.img.offsetX = this.img.x
+      this.img.offsetY = this.img.y
     }
     touchmove (e) {
       // console.log('ontouchmove', e)
@@ -278,29 +297,10 @@
         gesture.startX = clientX;
         gesture.startY = clientY;
 
-        img.x += offsetX;
-        img.y += offsetY;
-
-        // 判断边界
-        // var nowWidth = this.data.stv.width;
-        // var maxoffsetX = 320 - nowWidth;
-        // var nowHeight = this.data.stv.height;
-        // var maxoffsetY = 178.125 - nowHeight;
-
-        // if (stv.offsetX > maxoffsetX) {
-        //   stv.offsetX = maxoffsetX;
-        // } else if (stv.offsetX < 0) {
-        //   stv.offsetX = 0;
-        // }
-        // if (stv.offsetY > maxoffsetY) {
-        //   stv.offsetY = maxoffsetY;
-        // } else if (stv.offsetY < 0) {
-        //   stv.offsetY = 0;
-        // }
-        // this.setData({
-        //   stv: stv
-        // });
-        // console.log('this', this.data)
+        img.x += offsetX
+        img.y += offsetY
+        img.offsetX += offsetX
+        img.offsetY += offsetY
       } else {
         //双指缩放
         const {gesture, img} = this
@@ -311,21 +311,23 @@
         // 计算新的缩放比
         let distanceDiff = distance - gesture.distance;
         let diffScale =  0.004 * distanceDiff
-        let newScale = img.scale + diffScale;
-        if (newScale * img.originWidth < 100) {
+        let newScale = img.userScale + diffScale;
+        if (newScale * img.width < 100) {
           return 
         }
-        let newWidth = newScale * img.originWidth;
-        let newHeight = newScale * img.originHeight;
+        // let newWidth = newScale * img.originWidth;
+        // let newHeight = newScale * img.originHeight;
         // console.log('newWidth', newWidth, 'newHeight', newHeight)
 
         gesture.distance = distance
-        img.scale = newScale          
-        img.width = newWidth
-        img.height = newHeight
+        img.userScale = newScale          
+        // img.width = newWidth
+        // img.height = newHeight
         // 位移变化。使放大中心为图片中心
-        img.x = img.x - diffScale * img.originWidth *0.5 
-        img.y = img.y - diffScale * img.originHeight *0.5 
+        // img.x = img.x - diffScale * img.originWidth *0.5 
+        // img.y = img.y - diffScale * img.originHeight *0.5 
+        img.offsetX = img.width * (1 - img.userScale) * 0.5 + img.x
+        img.offsetY = img.height * (1 - img.userScale) * 0.5 + img.y
       }
     }
     // 函数截留
@@ -346,12 +348,10 @@
       const choosedImagePath = this.iamgePath;
       const context = wx.createCanvasContext('mycanvas');
       const { ratio } = canvas
-      const {width, height, x, y} = img
-      const offsetX = x;
-      const offsetY = y;
+      const {width, height, offsetX, offsetY, userScale} = img
 
       //防止锯齿，绘的图片是所需图片的两倍
-      context.drawImage(choosedImagePath, offsetX * ratio, offsetY * ratio, width * ratio, height * ratio);
+      context.drawImage(choosedImagePath, offsetX * ratio, offsetY * ratio, width * userScale * ratio, height * userScale * ratio);
 
      
       //绘制图片

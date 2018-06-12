@@ -195,8 +195,7 @@
       this.onShowLoading()
       await this.getTagList()
       await this.randomRender()
-      this.onHideLoading()
-      // wx.navigateTo({url: `/pages/style`})
+      this.onHideLoading()      
       wx.redirectTo({url: '/pages/style'})
     }
 
