@@ -153,7 +153,8 @@
         width: 375,
         height: 375,
         ratio: 1
-      }
+      },
+      loading: false
     }
 
     computed = {}
@@ -233,6 +234,7 @@
         console.log('end', this.img)
       },
       generateImage () {
+        this.loading = true
         wx.showLoading({
           title: "正在生成图片",
           mask: true,
@@ -240,6 +242,14 @@
         this.createCanvas()
       },
       back () {
+        if (this.loading) {
+          wx.showToast({
+            title: '图片生成中不能重选',
+            icon: 'success',
+            duration: 3000
+          }) 
+          return
+        }
         wx.navigateBack({url: `/pages/versa`})
       }
     }
@@ -369,6 +379,7 @@
             console.log('globalData', _this.$parent.globalData)
             // 跳转裁剪后页面
             wx.hideLoading()
+            this.loading = false
             // wx.navigateTo({url: `/pages/waiting`})
             wx.redirectTo({url: '/pages/waiting'})
           },

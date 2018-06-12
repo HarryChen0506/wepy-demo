@@ -163,6 +163,15 @@
     methods = {
       back () {
         // console.log('back')
+        if (this.loading) {
+          // console.log('图片渲染中不能重选')
+          wx.showToast({
+            title: '图片渲染中不能重选',
+            icon: 'success',
+            duration: 3000
+          }) 
+          return
+        }
         wx.navigateBack({url: `/pages/versa`})      
       },      
       show () {
